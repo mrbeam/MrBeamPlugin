@@ -979,11 +979,9 @@ class UsageHandler(object):
             logger = self._logger
 
         # get the global values
-        pressure_loss = usage_data.get(
-            self.PRESSURE_KEY, AirFilter.MAX_PRESSURE_DIFFERENCE
-        )
+        pressure_loss = usage_data.get(self.PRESSURE_KEY, 0)
         rpm_filter_test = self._get_airfilter_carbon_filter_usage_data().get(
-            self.FAN_TEST_RPM_KEY, AirFilter.MAX_FAN_TEST_RPM
+            self.FAN_TEST_RPM_KEY, 0
         )  # this is saved in carbon filter stage
 
         # calculate the percentages

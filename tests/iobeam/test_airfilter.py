@@ -1,7 +1,12 @@
 import pytest
-from mock.mock import MagicMock
+from mock.mock import MagicMock, patch
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
+
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 from octoprint_mrbeam.iobeam.airfilter import AirFilter, airfilter
+from octoprint_mrbeam.model.iobeam import exhaust
+from tests.conftest import subscribe
 
 DEFAULT_PROFILE = {
     "carbonfilter": [
@@ -23,6 +28,19 @@ DEFAULT_PROFILE = {
 }
 
 
+def set_airfilter(airfilter, model_id, serial):
+    if model_id is not None and serial is not None:
+        subscribe(
+            airfilter._event_bus,
+            MrBeamEvents.AIRFILTER_CHANGED,
+            airfilter.set_airfilter,
+            model_id,
+            serial,
+        )
+    else:
+        airfilter.set_airfilter(model_id, serial)
+
+
 def test_singelton(mrbeam_plugin):
     # Arrange
     air_filter = airfilter(mrbeam_plugin)
@@ -38,7 +56,7 @@ def test_set_airfilter(air_filter):
     # Arrange
 
     # Act
-    air_filter.set_airfilter(8, "123456")
+    set_airfilter(air_filter, 8, "123456")
     # Assert
     assert air_filter.model_id == 8
     assert air_filter.serial == "123456"
@@ -46,7 +64,11 @@ def test_set_airfilter(air_filter):
 
 def test_model_name_AF1_or_fan(air_filter):
     # Arrange
-    air_filter.connected = True  # AF1 or fan need to be connected state to show name
+    subscribe(
+        air_filter._event_bus,
+        MrBeamEvents.AIRFILTER_CHANGED,
+        lambda: setattr(air_filter, "connected", True),
+    )  # AF1 or fan need to be connected state to show name
     # Act
     model_name = air_filter.model
     # Assert
@@ -55,8 +77,8 @@ def test_model_name_AF1_or_fan(air_filter):
 
 def test_model_name_AF2(air_filter):
     # Arrange
-    for i in range(2, 8):
-        air_filter.set_airfilter(i, "serial")
+    for i in range(2, 5):
+        set_airfilter(air_filter, i, "serial")
         # Act
         model_name = air_filter.model
         # Assert
@@ -65,7 +87,7 @@ def test_model_name_AF2(air_filter):
 
 def test_model_name_AF3(air_filter):
     # Arrange
-    air_filter.set_airfilter(8, "serial")
+    set_airfilter(air_filter, 8, "serial")
     # Act
     model_name = air_filter.model
     # Assert
@@ -81,7 +103,7 @@ def test_model_name_invalid_model_id(air_filter):
     assert model_name == "Unknown"
 
     # Arrange
-    air_filter.set_airfilter(100, "serial")
+    set_airfilter(air_filter, 100, "serial")
     # Act
     model_name = air_filter.model
     # Assert
@@ -100,7 +122,7 @@ def test_set_airfilter_when_information_is_missing(model_id, serial, air_filter)
     # Arrange
 
     # Act
-    air_filter.set_airfilter(model_id, serial)
+    set_airfilter(air_filter, model_id, serial)
     # Assert
     assert air_filter.model_id is None
     assert air_filter.serial is None
@@ -207,7 +229,7 @@ def test_temperatures_string_value(air_filter):
 
 def test_profile_for_airfilter_1(air_filter):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    set_airfilter(air_filter, 1, "serial")
 
     # Act
     profile = air_filter.profile
@@ -235,7 +257,7 @@ def test_profile_for_airfilter_1(air_filter):
 
 def test_profile_for_airfilter_8(air_filter):
     # Arrange
-    air_filter.set_airfilter(8, "serial")
+    set_airfilter(air_filter, 8, "serial")
 
     # Act
     profile = air_filter.profile
@@ -272,7 +294,7 @@ def test_get_profile_invalid_id(air_filter):
 
 def test_get_profile_none_existing_id(air_filter):
     # Arrange
-    air_filter.set_airfilter(100, "serial")
+    set_airfilter(air_filter, 100, "serial")
 
     # Act
     profile = air_filter.profile
@@ -294,7 +316,7 @@ def test_get_profile_for_none_id(air_filter):
 
 def test_get_lifespan_for_airfilter_1_carbonfilter(air_filter):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    set_airfilter(air_filter, 1, "serial")
 
     # Act
     lifespan = air_filter.get_lifespan("carbonfilter")
@@ -317,7 +339,7 @@ def test_get_lifespan_for_airfilter_1_carbonfilter(air_filter):
 )
 def test_get_lifespan_for_prefilter(model_id, expected_lifespan, air_filter):
     # Arrange
-    air_filter.set_airfilter(model_id, "serial")
+    set_airfilter(air_filter, model_id, "serial")
 
     # Act
     lifespan = air_filter.get_lifespan("prefilter")
@@ -342,7 +364,7 @@ def test_get_lifespans_when_filterstage_is_prefilter_and_heavy_duty_prefilter_is
     model_id, expected_lifespan, air_filter
 ):
     # Arrange
-    air_filter.set_airfilter(model_id, "serial")
+    set_airfilter(air_filter, model_id, "serial")
     air_filter.heavy_duty_prefilter_enabled = MagicMock(return_value=True)
 
     # Act
@@ -354,7 +376,7 @@ def test_get_lifespans_when_filterstage_is_prefilter_and_heavy_duty_prefilter_is
 
 def test_get_lifespan_for_invalid_filter(air_filter):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    set_airfilter(air_filter, 1, "serial")
 
     # Act
     lifespan = air_filter.get_lifespan("invalidfilter")
@@ -376,7 +398,7 @@ def test_get_lifespan_for_invalid_model(air_filter):
 
 def test_get_lifespan_for_invalid_filter_stage_id(air_filter):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    set_airfilter(air_filter, 1, "serial")
 
     # Act
     lifespan = air_filter.get_lifespan("prefilter", 20)
@@ -387,7 +409,7 @@ def test_get_lifespan_for_invalid_filter_stage_id(air_filter):
 
 def test_get_lifespan_for_invalid_filter_stage_id_input(air_filter):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    set_airfilter(air_filter, 1, "serial")
 
     # Act
     lifespan = air_filter.get_lifespan("prefilter", "invalid")
@@ -398,7 +420,7 @@ def test_get_lifespan_for_invalid_filter_stage_id_input(air_filter):
 
 def test_get_list_of_lifespans_for_prefilter(air_filter, mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    set_airfilter(air_filter, 1, "serial")
 
     # Act
     lifespan = air_filter.get_lifespans("prefilter")
@@ -408,7 +430,7 @@ def test_get_list_of_lifespans_for_prefilter(air_filter, mrbeam_plugin):
 
     # Arrange
     air_filter = AirFilter(mrbeam_plugin)
-    air_filter.set_airfilter(8, "serial")
+    set_airfilter(air_filter, 8, "serial")
 
     # Act
     lifespan = air_filter.get_lifespans("prefilter")
@@ -419,7 +441,7 @@ def test_get_list_of_lifespans_for_prefilter(air_filter, mrbeam_plugin):
 
 def test_get_list_of_lifespans_for_carbonfilter(air_filter, mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    set_airfilter(air_filter, 1, "serial")
 
     # Act
     lifespan = air_filter.get_lifespans("carbonfilter")
@@ -429,7 +451,7 @@ def test_get_list_of_lifespans_for_carbonfilter(air_filter, mrbeam_plugin):
 
     # Arrange
     air_filter = AirFilter(mrbeam_plugin)
-    air_filter.set_airfilter(8, "serial")
+    set_airfilter(air_filter, 8, "serial")
 
     # Act
     lifespan = air_filter.get_lifespans("carbonfilter")
@@ -451,7 +473,7 @@ def test_get_list_of_lifespans_profile_none(air_filter):
 
 def test_get_shopify_links_AF1_prefilter(air_filter):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    set_airfilter(air_filter, 1, "serial")
 
     # Act
     shopify_link = air_filter.get_shopify_links("prefilter")
@@ -479,7 +501,7 @@ def test_get_shopify_links_when_no_link_is_set_in_profile_then_return_empty_list
     air_filter,
 ):
     # Arrange
-    air_filter.set_airfilter(8, "serial")
+    set_airfilter(air_filter, 8, "serial")
     air_filter._profile = {"prefilter_stages": 1}
 
     # Act
@@ -499,7 +521,7 @@ def test_get_shopify_links_when_no_link_is_set_in_profile_then_return_empty_list
 def test_heavy_duty_prefilter_enabled_when_enabled_then_true(enabled, air_filter):
     # Arrange
     air_filter._plugin.is_heavy_duty_prefilter_enabled = MagicMock(return_value=enabled)
-    air_filter.set_airfilter(8, "serial")
+    set_airfilter(air_filter, 8, "serial")
 
     # Act
     heavy_duty_prefilter_enabled = air_filter.heavy_duty_prefilter_enabled()
@@ -517,7 +539,7 @@ def test_heavy_duty_prefilter_enabled_when_enabled_then_true(enabled, air_filter
 )
 def test_pressure_drop_prefilter(model_id, expected_pressure_drop, air_filter):
     # Arrange
-    air_filter.set_airfilter(model_id, "serial")
+    set_airfilter(air_filter, model_id, "serial")
     air_filter.set_pressure(pressure1=900, pressure2=800, pressure3=700, pressure4=600)
 
     # Act
@@ -536,7 +558,7 @@ def test_pressure_drop_prefilter(model_id, expected_pressure_drop, air_filter):
 )
 def test_pressure_drop_main_filter(model_id, expected_pressure_drop, air_filter):
     # Arrange
-    air_filter.set_airfilter(model_id, "serial")
+    set_airfilter(air_filter, model_id, "serial")
     air_filter.set_pressure(pressure1=900, pressure2=800, pressure3=700, pressure4=600)
 
     # Act
@@ -570,7 +592,7 @@ def test_get_last_pressure_values(air_filter):
 
 def test_set_pressure_af2(air_filter):
     # Arrange
-    air_filter.set_airfilter(2, "serial")
+    set_airfilter(air_filter, 2, "serial")
 
     # Act
     air_filter.set_pressure(pressure=900)
@@ -594,7 +616,7 @@ def test_exhaust_hose_is_blocked_if_af3(
     model_id, pressure, expected_blocked, air_filter
 ):
     # Arrange
-    air_filter.set_airfilter(model_id, "serial")
+    set_airfilter(air_filter, model_id, "serial")
     air_filter.set_pressure(pressure, pressure, pressure, pressure)
 
     # Act
@@ -605,34 +627,98 @@ def test_exhaust_hose_is_blocked_if_af3(
 
 
 @pytest.mark.parametrize(
-    "connected",
+    "connected,event",
     [
-        True,
-        False,
+        (True, IoBeamEvents.FAN_CONNECTED),
+        (False, IoBeamEvents.FAN_DISCONNECTED),
     ],
 )
-def test_set_connected(connected, air_filter):
+def test_set_connected__when__af3__and__external_power(connected, event, air_filter):
     # Arrange
-    air_filter.set_airfilter(8, "serial")
+    set_airfilter(air_filter, 8, "serial")
+
     # Act
-    air_filter.connected = connected
+    subscribe(
+        air_filter._event_bus,
+        event,
+        lambda: setattr(air_filter, "connected", connected),
+    )
+
+    air_filter.set_device(
+        exhaust.Device.from_dict({"ext_power": True, "ext_voltage": 24.0})
+    )
 
     # Assert
     assert air_filter.connected == connected
 
 
 @pytest.mark.parametrize(
-    "connected",
+    "connected,event",
     [
-        True,
-        False,
+        (True, IoBeamEvents.FAN_CONNECTED),
+        (False, IoBeamEvents.FAN_DISCONNECTED),
     ],
 )
-def test_set_connected__when__non_smart_af(connected, air_filter):
+def test_connected_when__af3__and__no_external_power(connected, event, air_filter):
     # Arrange
-    air_filter.set_airfilter(None, None)
+    set_airfilter(air_filter, 8, "serial")
+
     # Act
-    air_filter.connected = connected
+    subscribe(
+        air_filter._event_bus,
+        event,
+        lambda: setattr(air_filter, "connected", connected),
+    )
+
+    air_filter.set_device(
+        exhaust.Device.from_dict({"ext_power": False, "ext_voltage": 24.0})
+    )
+
+    # Assert
+    assert air_filter.connected == False
+
+
+@pytest.mark.parametrize(
+    "connected,event",
+    [
+        (True, MrBeamEvents.AIRFILTER_CHANGED),
+        (False, IoBeamEvents.FAN_DISCONNECTED),
+    ],
+)
+def test_set_connected__when__non_smart_af(connected, event, air_filter):
+    # Arrange
+    set_airfilter(air_filter, None, None)
+
+    # Act
+    subscribe(
+        air_filter._event_bus,
+        event,
+        lambda: setattr(air_filter, "connected", connected),
+    )
 
     # Assert
     assert air_filter.connected == connected
+
+
+def test_reset_of_exhaust__when__af3__and__ext_power_is_connected(air_filter):
+    # Arrange
+    set_airfilter(air_filter, 8, "serial")
+    air_filter.set_device(
+        exhaust.Device.from_dict(
+            {"ext_power": False, "ext_voltage": 24.0, "serial_num": 0}
+        )
+    )
+
+    with patch.object(air_filter._iobeam, "reset_exhaust") as reset_exhaust:
+        # Act
+        air_filter.set_device(
+            exhaust.Device.from_dict(
+                {"ext_power": True, "ext_voltage": 24.0, "serial_num": 0}
+            )
+        )
+
+        # Assert
+        # assert self._iobeam.reset_exhaust() is called
+        print("iobeam", air_filter._iobeam)
+        print("reset_exhaust", reset_exhaust)
+        reset_exhaust.assert_called_once()

@@ -11,7 +11,6 @@ $(function () {
         let self = this;
         window.mrbeam.viewModels["aboutSettingsViewModel"] = self;
         self.mrb_state = params[0];
-        self.airfilter_serial = self.mrb_state.airfilter_serial;
         self.airfilter_model = self.mrb_state.airfilter_model;
     }
 

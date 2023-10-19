@@ -7,6 +7,7 @@ import yaml
 from flask_babel import gettext
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
+from octoprint_mrbeam.model.iobeam import exhaust
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -50,8 +51,7 @@ class AirFilter(object):
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
 
     PRESSURE_VALUES_LIST_SIZE = 5
-    MAX_PRESSURE_DIFFERENCE = 1880
-    MAX_FAN_TEST_RPM = 10750
+
     AF3_MAX_PREFILTER_PRESSURE_CHANGE = (
         100  # The maximum pressure change in Pa for the prefilter of the AF3
     )
@@ -69,7 +69,7 @@ class AirFilter(object):
         (950, 40),
         (1150, 60),
         (1500, 80),
-        (MAX_PRESSURE_DIFFERENCE, 100),
+        (1880, 100),
     ]
     AF3_PRESSURE_GRAPH_PREFILTER = [
         (100, 0),
@@ -83,7 +83,7 @@ class AirFilter(object):
         (9860, 0),
         (9900, 20),
         (10200, 70),
-        (MAX_FAN_TEST_RPM, 100),
+        (10750, 100),
     ]
 
     class ProfileParameters(Enum):
@@ -128,8 +128,33 @@ class AirFilter(object):
         self._connected = None
         self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
         self._profile = None
+        self._external_power = None
+        self._iobeam = None
 
         self._load_current_profile()
+        self._event_bus.subscribe(
+            MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
+        )
+
+    def reset_data(self):
+        """Resets all data of the air filter."""
+        self._serial = None
+        self._model_id = None
+        self._pressure1 = None
+        self._pressure2 = None
+        self._pressure3 = None
+        self._pressure4 = None
+        self._temperature1 = None
+        self._temperature2 = None
+        self._temperature3 = None
+        self._temperature4 = None
+        self._profile = None
+        self._connected = None
+        self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
+        self._external_power = None
+
+    def _on_mrbeam_plugin_initialized(self, event, payload):
+        self._iobeam = self._plugin.iobeam
 
     @property
     def model(self):
@@ -223,7 +248,10 @@ class AirFilter(object):
 
     def _airfilter_changed(self):
         self._plugin.send_mrb_state()
-        self._event_bus.fire(MrBeamEvents.AIRFILTER_CHANGED)
+        self._event_bus.fire(
+            MrBeamEvents.AIRFILTER_CHANGED,
+            {"model_id": self._model_id, "serial": self.serial},
+        )
 
     def set_pressure(
         self,
@@ -259,6 +287,29 @@ class AirFilter(object):
             )
         elif self._pressure1 is not None and self.model_id in self.AIRFILTER2_MODELS:
             self._last_pressure_values.append(self._pressure1)
+
+    def set_device(self, device):
+        """
+        Sets the device data of the air filter.
+
+        Args:
+            device (exhaust.Device):
+
+        Returns:
+            None
+        """
+        if (
+            self._external_power != device.ext_power
+            and device.ext_power
+            and device.serial_num == 0
+        ):
+            self._logger.info(
+                "Exhaust fan is now connected to external power -> reset exhaust"
+            )
+            self._iobeam.reset_exhaust()
+            return None
+        else:
+            self._external_power = device.ext_power
 
     def _get_avg_pressure_differences(self):
         """Returns the average pressure differences of the last pressure readings.
@@ -296,7 +347,7 @@ class AirFilter(object):
         Returns:
             int: Pressure drop of the main filter
         """
-        if self.model_id in self.AIRFILTER3_MODELS:
+        if self.is_airfilter3():
             (
                 _,
                 mainfilter_pressure_avg,
@@ -306,8 +357,17 @@ class AirFilter(object):
             return mainfilter_pressure_avg - fan_pressure_avg
         return None
 
+    def is_airfilter3(self):
+        """
+        Return True if the current air filter is an air filter 3
+
+        Returns:
+            bool: True if the current air filter is an air filter 3
+        """
+        return self.model_id in self.AIRFILTER3_MODELS
+
     def exhaust_hose_is_blocked(self):
-        if self.model_id in self.AIRFILTER3_MODELS:
+        if self.is_airfilter3():
             return self._pressure2 < self.AF3_PRESSURE2_MIN
         return None
 
@@ -318,7 +378,7 @@ class AirFilter(object):
         Returns:
                 int: Pressure drop of the prefilter
         """
-        if self.model_id in self.AIRFILTER3_MODELS:
+        if self.is_airfilter3():
             (
                 prefilter_pressure_avg,
                 mainfilter_pressure_avg,
@@ -330,6 +390,8 @@ class AirFilter(object):
 
     @property
     def connected(self):
+        if self.is_airfilter3() and not self._external_power:
+            return False
         return self._connected
 
     @connected.setter
@@ -346,7 +408,10 @@ class AirFilter(object):
         if self._connected != connected:
             self._connected = connected
             if connected:
-                self._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
+                self._event_bus.fire(
+                    IoBeamEvents.FAN_CONNECTED,
+                    {"serial": self.serial, "model_id": self.model_id},
+                )
                 # If the fan gets marked as connected but we don't have a serial number or model id
                 # Then the af used is a non smart => AF1 or single
                 if self.serial is None and self.model_id is None:
@@ -361,7 +426,10 @@ class AirFilter(object):
                     )
                     self._connected = connected  # need to set it here again as the set_airfilter resets it
             else:
-                self._event_bus.fire(IoBeamEvents.FAN_DISCONNECTED)
+                self._event_bus.fire(
+                    IoBeamEvents.FAN_DISCONNECTED,
+                    {"serial": self.serial, "model_id": self.model_id},
+                )
 
     def set_temperatures(
         self,
@@ -386,22 +454,6 @@ class AirFilter(object):
             self._temperature3 = temperature3
         if temperature4 is not None:
             self._temperature4 = temperature4
-
-    def reset_data(self):
-        """Resets all data of the air filter."""
-        self._serial = None
-        self._model_id = None
-        self._pressure1 = None
-        self._pressure2 = None
-        self._pressure3 = None
-        self._pressure4 = None
-        self._temperature1 = None
-        self._temperature2 = None
-        self._temperature3 = None
-        self._temperature4 = None
-        self._profile = None
-        self._connected = None
-        self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
 
     def _load_current_profile(self):
         """Loads the current profile of the air filter and safes it in self._profile.
