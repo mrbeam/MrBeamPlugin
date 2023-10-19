@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-16 15:51+0200\n"
-"PO-Revision-Date: 2023-10-16 15:54+0200\n"
+"POT-Creation-Date: 2023-10-19 12:12+0200\n"
+"PO-Revision-Date: 2023-10-19 12:13+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -123,7 +123,7 @@ msgid "...and more!"
 msgstr "...und mehr!"
 
 # don’t change the link
-#: octoprint_mrbeam/iobeam/airfilter.py:602
+#: octoprint_mrbeam/iobeam/airfilter.py:652
 msgid "https://www.mr-beam.org/en/"
 msgstr "https://www.mr-beam.org/"
 
@@ -4563,7 +4563,7 @@ msgstr ""
 "Mr Beam Lasers wird das Bild weder veröffentlichen noch an Dritte verkaufen."
 
 # URL - do not translate/modify
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:99
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:226
 msgid "/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf"
 msgstr "/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_de.pdf"
@@ -4929,8 +4929,8 @@ msgstr "Bitte führe zuerst einen Homing-Zyklus durch"
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:37
 msgid ""
 "Wait until the engraving is finished and Mr Beam Status Lights are green. "
-"Open the safety lid again and be carefult NOT to touch the engraved "
-"material. The camera will now take a picture of the engraving."
+"Open the safety lid again and be careful NOT to touch the engraved material. "
+"The camera will now take a picture of the engraving."
 msgstr ""
 "Warte, bis die Gravur beendet ist und die Mr Beam Status Lights grün "
 "leuchten. Öffne den Sicherheitsdeckel wieder OHNE dabei das gravierte "
@@ -5298,7 +5298,6 @@ msgstr "https://mr-beam.org/downloads/"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:14
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:19
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:30
 msgid "Serial number"
 msgstr "Seriennummer"
 
@@ -5308,7 +5307,7 @@ msgid "Laser head"
 msgstr "Laserkopf"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:22
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:33
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:31
 msgid "Model"
 msgstr "Modell"
 
@@ -5316,124 +5315,124 @@ msgstr "Modell"
 msgid "Air Filter System"
 msgstr "Air Filter System"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:38
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:36
 msgid "Network interfaces"
 msgstr "Netzwerk-Schnittstellen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:54
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:52
 msgid "Mr Beam Plugin"
 msgstr "Mr Beam Plugin"
 
 # do not translate
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:56
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:54
 msgid "Image fingerprint"
 msgstr "Image-Fingerprint"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:57
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:55
 msgid "Software channel"
 msgstr "Software-Channel"
 
 # do not translate
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:58
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:56
 msgid "Environment"
 msgstr "Environment"
 
 # do not translate
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:59
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:57
 msgid "grbl"
 msgstr "grbl"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:80
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:78
 msgid "Documentation, Support and Privacy"
 msgstr "Dokumentation, Support und Datenschutz"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:90
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:88
 msgid "get the latest versions"
 msgstr "Bekomme die neuesten Versionen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:90
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:88
 msgid "online"
 msgstr "online"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:95
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:93
 msgid "Online Support Portal"
 msgstr "Online Support Portal"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:96
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:94
 msgid "Privacy Policies"
 msgstr "Datenschutzbestimmungen"
 
 # don’t change the link
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:95
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:161
 msgid "https://www.mr-beam.org/en"
 msgstr "https://www.mr-beam.org"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:95
 msgid "Mr Beam Web Site"
 msgstr "Mr Beam Website"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:98
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:121
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:96
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:119
 msgid "find.mr-beam service"
 msgstr "find.mr-beam Service"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:99
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
 msgid "Mr Beam Analytics"
 msgstr "Mr Beam Analytics"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:107
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:105
 msgid "Links"
 msgstr "Links"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:110
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:108
 msgid "Website"
 msgstr "Webseite"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:111
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:109
 msgid "Social media"
 msgstr "Soziale Medien"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:120
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:118
 msgid "Official user group"
 msgstr "Offizielle User-Group"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:120
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:118
 msgid "on Facebook"
 msgstr "auf Facebook"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:120
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:118
 msgid "German"
 msgstr "Deutsch"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:122
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:120
 msgid "Online resources"
 msgstr "Online-Ressourcen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:122
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:120
 msgid "Mr Beam Downloads"
 msgstr "Mr Beam Downloads"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:123
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:121
 msgid "Source code"
 msgstr "Quellcode"
 
