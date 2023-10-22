@@ -225,7 +225,6 @@ class ServerThread(threading.Thread):
 
     def _send(self, payload):
         if self.conn is not None:
-            self._logger.info("  --> " + payload)
             self.conn.send(payload + self.SOCKET_NEWLINE)
         else:
             raise Exception("No Connection, not able to write on socket")

@@ -69,11 +69,12 @@ from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.rest_handler.docs_handler import DocsRestHandlerMixin
 from octoprint_mrbeam.model.laser_cutter_mode import LaserCutterModeModel
-from octoprint_mrbeam.services import settings_service
-from octoprint_mrbeam.services.settings_service import SettingsService
-from octoprint_mrbeam.services.burger_menu_service import BurgerMenuService
-from octoprint_mrbeam.services.document_service import DocumentService
-from octoprint_mrbeam.services.laser_cutter_mode import laser_cutter_mode_service
+from octoprint_mrbeam.service import settings_service
+from octoprint_mrbeam.service.settings_service import SettingsService
+from octoprint_mrbeam.service.burger_menu_service import BurgerMenuService
+from octoprint_mrbeam.service.document_service import DocumentService
+from octoprint_mrbeam.service.laser_cutter_mode import laser_cutter_mode_service
+from octoprint_mrbeam.service.profile.laser_cutter_profile import laser_cutter_profile_service
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
