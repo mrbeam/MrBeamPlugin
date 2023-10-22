@@ -77,7 +77,7 @@ $(function () {
             // self.oneButton =
             //     self.laserCutterProfiles.currentProfileData().start_method !=
             //         undefined &&
-            //     self.laserCutterProfiles.currentProfileData().start_method() ==
+            //     self.laserCutterProfiles.currentProfileData().start_method ==
             //         "onebutton";
             // if (!self.laserCutterProfiles.hasDataLoaded) {
             //     self.oneButton = true;

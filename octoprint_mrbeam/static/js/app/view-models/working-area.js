@@ -77,10 +77,10 @@ $(function () {
         });
 
         self.workingAreaWidthMM = ko.computed(function () {
-            return self.profile.currentProfileData().volume.width();
+            return self.profile.currentProfileData().volume.width;
         }, self);
         self.workingAreaHeightMM = ko.computed(function () {
-            return self.profile.currentProfileData().volume.depth();
+            return self.profile.currentProfileData().volume.depth;
         }, self);
 
         // QuickShape limits
@@ -4286,8 +4286,8 @@ $(function () {
 
             // TODO get from https://github.com/mrbeam/MrBeamPlugin/blob/2682b7a2e97373478e6516a98c8ba766d26ff317/octoprint_mrbeam/static/js/lasercutterprofiles.js#L276
             // once this branch feature/SW-244... is merged.
-            const fx = self.profile.currentProfileData().axes.x.speed();
-            const fy = self.profile.currentProfileData().axes.y.speed();
+            const fx = self.profile.currentProfileData().axes.x.speed;
+            const fy = self.profile.currentProfileData().axes.y.speed;
             const maxSpeed = Math.min(fx, fy);
 
             crosshairHandle.mousedown(function (event) {

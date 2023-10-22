@@ -1701,24 +1701,9 @@ class MrBeamPlugin(
     # 		return NO_CONTENT
 
     # Laser cutter profiles
-    @octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/currentProfile", methods=["GET"])
     def laserCutterProfilesList(self):
-        all_profiles = self.laserCutterProfileManager.converted_profiles()
-        for profile_id, profile in all_profiles.items():
-            all_profiles[profile_id]["resource"] = url_for(
-                ".laserCutterProfilesGet", identifier=profile["id"], _external=True
-            )
-        return jsonify(dict(profiles=all_profiles))
-
-    @octoprint.plugin.BlueprintPlugin.route(
-        "/profiles/<string:identifier>", methods=["GET"]
-    )
-    def laserCutterProfilesGet(self, identifier):
-        profile = self.laserCutterProfileManager.get(identifier)
-        if profile is None:
-            return make_response("Unknown profile: %s" % identifier, 404)
-        else:
-            return jsonify(self._convert_profile(profile))
+        return jsonify(self.laser_cutter_profile_service.get_current_or_default())
 
     # ~ Calibration
     def generateCalibrationMarkersSvg(self):

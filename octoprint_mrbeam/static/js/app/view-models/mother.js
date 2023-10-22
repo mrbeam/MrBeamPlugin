@@ -76,7 +76,7 @@ $(function () {
             //self.requestData();
 
             self.control.showZAxis = ko.computed(function () {
-                //				var has = self.currentProfileData()['zAxis']();
+                //				var has = self.currentProfileData()['zAxis'];
                 //				return has;
                 return false;
             });

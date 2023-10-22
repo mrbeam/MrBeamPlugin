@@ -1261,9 +1261,7 @@ $(function () {
                         (intensity_black_user - intensity_white_user);
                 var intensity = Math.round(
                     intensity_user *
-                        self.profile
-                            .currentProfileData()
-                            .laser.intensity_factor()
+                        self.profile.currentProfileData().laser.intensity_factor
                 );
                 var feedrate = Math.round(
                     speed_white + initial_factor * (speed_black - speed_white)
@@ -1317,7 +1315,7 @@ $(function () {
                 );
                 var intensity =
                     intensity_user *
-                    self.profile.currentProfileData().laser.intensity_factor();
+                    self.profile.currentProfileData().laser.intensity_factor;
                 var feedrate = parseFloat($(job).find(".param_feedrate").val());
                 var piercetime = parseFloat(
                     $(job).find(".param_piercetime").val()
@@ -1411,11 +1409,11 @@ $(function () {
                 intensity_black_user: self.imgIntensityBlack(),
                 intensity_black:
                     self.imgIntensityBlack() *
-                    self.profile.currentProfileData().laser.intensity_factor(),
+                    self.profile.currentProfileData().laser.intensity_factor,
                 intensity_white_user: self.imgIntensityWhite(),
                 intensity_white:
                     self.imgIntensityWhite() *
-                    self.profile.currentProfileData().laser.intensity_factor(),
+                    self.profile.currentProfileData().laser.intensity_factor,
                 speed_black: self.imgFeedrateBlack(),
                 speed_white: self.imgFeedrateWhite(),
                 dithering: self.imgDithering(),
