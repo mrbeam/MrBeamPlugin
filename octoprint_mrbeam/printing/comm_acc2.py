@@ -40,6 +40,7 @@ from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.service.profile.laser_cutter_profile import laser_cutter_profile_service
 
 
 ### MachineCom #########################################################################################################
@@ -164,7 +165,7 @@ class MachineCom(object):
         self._port = port
         self._baudrate = baudrate
         self._callback = callbackObject
-        self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
+        self._laserCutterProfile = printerProfileManager.get_current_or_default()
 
         self._state = self.STATE_NONE
         self._grbl_state = None
@@ -1948,7 +1949,7 @@ class MachineCom(object):
                 try:
                     self._laserCutterProfile["grbl"]["auto_update_file"] = None
                     self._laserCutterProfile["grbl"]["auto_update_version"] = None
-                    laserCutterProfileManager().save(
+                    laser_cutter_profile_service().save(
                         self._laserCutterProfile, allow_overwrite=True
                     )
                 except Exception:

@@ -112,6 +112,8 @@ from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
 from octoprint_mrbeam.util.version_comparator import compare_pep440_versions
+from octoprint_mrbeam.constant.profile import laser_cutter
+from octoprint_mrbeam.enums.laser_cutter_mode import LaserCutterModeEnum
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -170,6 +172,8 @@ class MrBeamPlugin(
     RESTART_OCTOPRINT_CMD = "sudo systemctl restart octoprint.service"
 
     def __init__(self):
+        self._laser_cutter_mode_service = None
+        self.laser_cutter_profile_service = None
         self.mrbeam_plugin_initialized = False
         self._shutting_down = False
         self._slicing_commands = dict()
@@ -199,9 +203,7 @@ class MrBeamPlugin(
 
         # Create the ``laserCutterProfileManager`` early to inject into the ``Laser``
         # See ``laser_factory``
-        self.laserCutterProfileManager = laserCutterProfileManager(
-            profile_id=self._device_info.get_type()
-        )
+        self.laser_cutter_profile_service = laser_cutter_profile_service()
 
         self._boot_grace_period_counter = 0
 
@@ -217,9 +219,6 @@ class MrBeamPlugin(
 
         # Jinja custom filters need to be loaded already on instance creation
         FilterLoader.load_custom_jinja_filters()
-
-        # Initialize the laser cutter mode service attribute
-        self._laser_cutter_mode_service = None
 
     # inside initialize() OctoPrint is already loaded, not assured during __init__()!
     def initialize(self):
@@ -299,11 +298,39 @@ class MrBeamPlugin(
         self._octoprint_connectivity_checker = self._connectivity_checker
         self._connectivity_checker = ConnectivityChecker(self)
 
+        # Initialize the laser cutter mode service
+        self._laser_cutter_mode_service = laser_cutter_mode_service(self)
+
+        # Update the laser cutter profile service based on the detected mode
+        self.update_laser_cutter_profile_service()
+        # Try to connect again as the laser cutter profile might have changed
+        # This will disconnect then connect in case of a current connection
+        self._try_to_connect_laser()
+
         self._do_initial_log()
         self._printer.register_user_notification_system(self.user_notification_system)
 
-        # Initialize the laser cutter mode service
-        self._laser_cutter_mode_service = laser_cutter_mode_service(self)
+    def update_laser_cutter_profile_service(self):
+        corresponding_laser_cutter_profile = self.get_corresponding_laser_cutter_profile()
+        corresponding_laser_cutter_profile_id = corresponding_laser_cutter_profile['id']
+        if self.laser_cutter_profile_service.exists(corresponding_laser_cutter_profile_id):
+            self._logger.info("Laser cutter profile already exists.")
+        else:
+            self._logger.info("Laser cutter profile does not exist. Creating it.")
+            self.laser_cutter_profile_service.save(corresponding_laser_cutter_profile)
+        self.laser_cutter_profile_service.select(corresponding_laser_cutter_profile_id)
+
+    def get_corresponding_laser_cutter_profile(self):
+        if self.get_laser_cutter_mode() == LaserCutterModeEnum.DEFAULT.value and self._device_info.get_series() != "2C":
+            return laser_cutter.profile_1.profile
+        elif self.get_laser_cutter_mode() == LaserCutterModeEnum.DEFAULT.value and self._device_info.get_series() == "2C":
+            return dict_merge(laser_cutter.profile_1.profile, laser_cutter.profile_2.profile)
+        elif self.get_laser_cutter_mode() == LaserCutterModeEnum.ROTARY.value and self._device_info.get_series() != "2C":
+            return dict_merge(laser_cutter.profile_1.profile, laser_cutter.profile_3.profile)
+        elif self.get_laser_cutter_mode() == LaserCutterModeEnum.ROTARY.value and self._device_info.get_series() == "2C":
+            return dict_merge(laser_cutter.profile_1.profile, dict_merge(laser_cutter.profile_2.profile, laser_cutter.profile_3.profile))
+        else:
+            return laser_cutter.profile_1.profile
 
     def get_settings(self):
         return self._settings
@@ -343,7 +370,7 @@ class MrBeamPlugin(
                 and self._laserhead_ready
                 and self._printer.is_closed_or_error()
         ):
-            self._printer.connect()
+            self._printer.connect(profile=self.laser_cutter_profile_service.get_current_or_default())
 
     def _init_frontend_logger(self):
         handler = logging.handlers.RotatingFileHandler(
@@ -383,7 +410,7 @@ class MrBeamPlugin(
 
         msg = (
                 "MrBeam Lasercutter Profile: %s"
-                % self.laserCutterProfileManager.get_current_or_default()
+                % self.laser_cutter_profile_service.get_current_or_default()
         )
         self._logger.info(msg, terminal=True)
         self._frontend_logger.info(msg)
@@ -597,7 +624,7 @@ class MrBeamPlugin(
                 fps=self._settings.get(["leds", "fps"]),
             ),
             isFirstRun=self.isFirstRun(),
-            laser_cutter_mode=self._settings.get(["laser_cutter_mode"]),
+            laser_cutter_mode=self.get_laser_cutter_mode(),
         )
 
     def on_settings_save(self, data):
@@ -863,7 +890,7 @@ class MrBeamPlugin(
                 enable_accesscontrol and self._user_manager.hasBeenCustomized()
         )
 
-        selectedProfile = self.laserCutterProfileManager.get_current_or_default()
+        selectedProfile = self.laser_cutter_profile_service.get_current_or_default()
         enable_focus = selectedProfile["focus"]
         safety_glasses = selectedProfile["glasses"]
         # render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
@@ -1621,7 +1648,7 @@ class MrBeamPlugin(
     )
     @restricted_access_or_calibration_tool_mode
     def engraveCalibrationMarkers(self, intensity, feedrate):
-        profile = self.laserCutterProfileManager.get_current_or_default()
+        profile = self.laser_cutter_profile_service.get_current_or_default()
         try:
             i = int(int(intensity) / 100.0 * JobParams.Max.INTENSITY)
             f = int(feedrate)
@@ -1710,7 +1737,7 @@ class MrBeamPlugin(
         """Used from the calibration screen to engrave the calibration
         markers."""
         # TODO mv this func to other file
-        profile = self.laserCutterProfileManager.get_current_or_default()
+        profile = self.laser_cutter_profile_service.get_current_or_default()
         cm = CalibrationMarker(
             str(profile["volume"]["width"]), str(profile["volume"]["depth"])
         )
@@ -2103,7 +2130,7 @@ class MrBeamPlugin(
                         parse_csv(
                             device_model=self.get_model_id(),
                             laserhead_model=self.get_current_laser_head_model(),
-                            laser_cutter_mode=self.get_laser_cutter_mode(),
+                            laser_cutter_mode = self.get_laser_cutter_mode() if self.get_laser_cutter_mode() is not None else LaserCutterModeEnum.DEFAULT.value,
                         )
                     ),
                     200,
@@ -2590,7 +2617,7 @@ class MrBeamPlugin(
 
                 is_job_cancelled()  # check before conversion started
 
-                profile = self.laserCutterProfileManager.get_current_or_default()
+                profile = self.laser_cutter_profile_service.get_current_or_default()
                 maxWidth = profile["volume"]["width"]
                 maxHeight = profile["volume"]["depth"]
 
@@ -2819,7 +2846,7 @@ class MrBeamPlugin(
         return Laser(
             components["file_manager"],
             components["analysis_queue"],
-            self.laserCutterProfileManager,
+            self.laser_cutter_profile_service,
         )
 
     def laser_filemanager(self, *args, **kwargs):

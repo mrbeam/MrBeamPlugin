@@ -8,6 +8,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
 from octoprint_mrbeam.util import dict_merge
 from octoprint_mrbeam.util.errors import ErrorCodes
+from octoprint_mrbeam.service.profile.laser_cutter_profile import laser_cutter_profile_service
 
 
 class Laser(Printer):
@@ -48,6 +49,7 @@ class Laser(Printer):
             current_z=None,
         )
         self._user_notification_system = None
+        self._printerProfileManager = laser_cutter_profile_service()
 
         self._event_bus = eventManager()
         self._event_bus.subscribe(
@@ -72,8 +74,8 @@ class Laser(Printer):
         if self._comm is not None:
             self._comm.close()
 
-        eventManager().fire(Events.CONNECTING, payload=dict(profile=profile))
-        self._printerProfileManager.select(profile)
+        eventManager().fire(Events.CONNECTING, payload=dict(profile=self._printerProfileManager.get_current_or_default()['id']))
+        # self._printerProfileManager.select(profile)
         self._comm = comm.MachineCom(
             port,
             baudrate,
