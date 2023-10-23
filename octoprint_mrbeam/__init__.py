@@ -201,10 +201,6 @@ class MrBeamPlugin(
         self._iobeam_connected = False
         self._laserhead_ready = False
 
-        # Create the ``laserCutterProfileManager`` early to inject into the ``Laser``
-        # See ``laser_factory``
-        self.laser_cutter_profile_service = laser_cutter_profile_service()
-
         self._boot_grace_period_counter = 0
 
         self._time_ntp_synced = None
@@ -268,6 +264,9 @@ class MrBeamPlugin(
             )
 
         self.analytics_handler = analyticsHandler(self)
+        self._laser_cutter_mode_service = laser_cutter_mode_service(self)
+        self.laser_cutter_profile_service = laser_cutter_profile_service()
+        self.update_laser_cutter_profile_service()
         self.user_notification_system = user_notification_system(self)
         self.onebutton_handler = oneButtonHandler(self)
         self.interlock_handler = interLockHandler(self)
@@ -297,15 +296,6 @@ class MrBeamPlugin(
         # move octoprints connectivity checker to a new var so we can use our abstraction
         self._octoprint_connectivity_checker = self._connectivity_checker
         self._connectivity_checker = ConnectivityChecker(self)
-
-        # Initialize the laser cutter mode service
-        self._laser_cutter_mode_service = laser_cutter_mode_service(self)
-
-        # Update the laser cutter profile service based on the detected mode
-        self.update_laser_cutter_profile_service()
-        # Try to connect again as the laser cutter profile might have changed
-        # This will disconnect then connect in case of a current connection
-        self._try_to_connect_laser()
 
         self._do_initial_log()
         self._printer.register_user_notification_system(self.user_notification_system)
