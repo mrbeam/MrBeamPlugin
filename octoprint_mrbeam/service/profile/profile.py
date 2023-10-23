@@ -39,6 +39,8 @@ class ProfileService(object):
         folder (str): The folder to store the profiles in.
     """
 
+    DEFAULT_PROFILE_ID = "_default"
+
     def __init__(self, id="", default={}):
         self._default = default
         self._id = id
@@ -63,7 +65,7 @@ class ProfileService(object):
         if not default_overrides:
             return
 
-        if self.exists("_default"):
+        if self.exists(self.DEFAULT_PROFILE_ID):
             return
 
         if not isinstance(default_overrides, dict):
@@ -72,35 +74,35 @@ class ProfileService(object):
                     default_overrides))
             return
 
-        default_overrides["id"] = "_default"
+        default_overrides["id"] = self.DEFAULT_PROFILE_ID
         self.save(default_overrides)
 
         settings().set(["profiles", self._id, "defaultProfile"], None)
         settings().save()
 
-        self._logger.info("Migrated default profile from settings to _default.profile: {!r}".format(default_overrides))
+        self._logger.info("Migrated default profile from settings to {}.profile: {!r}".format(self.DEFAULT_PROFILE_ID, default_overrides))
 
     def _verify_default_available(self):
         default_id = settings().get(["profiles", self._id, "default"])
         if default_id is None:
-            default_id = "_default"
+            default_id = self.DEFAULT_PROFILE_ID
 
         if not self.exists(default_id):
-            if not self.exists("_default"):
-                if default_id == "_default":
+            if not self.exists(self.DEFAULT_PROFILE_ID):
+                if default_id == self.DEFAULT_PROFILE_ID:
                     self._logger.error(
-                        "Profile _default does not exist, creating _default again and setting it as default")
+                        "Profile {} does not exist, creating {} again and setting it as default".format(self.DEFAULT_PROFILE_ID, self.DEFAULT_PROFILE_ID))
                 else:
                     self._logger.error(
-                        "Selected default profile {} and _default do not exist, creating _default again and setting it as default".format(
-                            default_id))
+                        "Selected default profile {} and {} do not exist, creating {} again and setting it as default".format(
+                            default_id, self.DEFAULT_PROFILE_ID, self.DEFAULT_PROFILE_ID))
                 self.save(self._default, allow_overwrite=True, make_default=True)
             else:
                 self._logger.error(
-                    "Selected default profile {} does not exists, resetting to _default".format(default_id))
-                settings().set(["profiles", self._id, "default"], "_default")
+                    "Selected default profile {} does not exists, resetting to {}".format(default_id, self.DEFAULT_PROFILE_ID))
+                settings().set(["profiles", self._id, "default"], self.DEFAULT_PROFILE_ID)
                 settings().save()
-            default_id = "_default"
+            default_id = self.DEFAULT_PROFILE_ID
 
         profile = self.get(default_id)
         if profile is None:
@@ -171,7 +173,7 @@ class ProfileService(object):
 
     def is_default_unmodified(self):
         default = settings().get(["profiles", self._id, "default"])
-        return default is None or default == "_default" or not self.exists("_default")
+        return default is None or default == self.DEFAULT_PROFILE_ID or not self.exists(self.DEFAULT_PROFILE_ID)
 
     @property
     def profile_count(self):
