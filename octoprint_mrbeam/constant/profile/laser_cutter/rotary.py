@@ -12,6 +12,8 @@ profile = dict(
         ),
     grbl=dict(
         settings={
+            110: 500, # X Max rate, mm / min
+            111: 500, # Y Max rate, mm / min
             120: 30, # X Acceleration, mm / sec ^ 2
             121: 30, # Y Acceleration, mm / sec ^ 2
             111: 500, # Y Max rate, mm / min
