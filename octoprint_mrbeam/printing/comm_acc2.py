@@ -33,7 +33,6 @@ from octoprint.util import (
 )
 
 from octoprint_mrbeam.notifications import NotificationIds
-from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog

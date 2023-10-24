@@ -76,12 +76,6 @@ from octoprint_mrbeam.service.document_service import DocumentService
 from octoprint_mrbeam.service.laser_cutter_mode import laser_cutter_mode_service
 from octoprint_mrbeam.service.profile.laser_cutter_profile import laser_cutter_profile_service
 from octoprint_mrbeam.wizard_config import WizardConfig
-from octoprint_mrbeam.printing.profile import (
-    laserCutterProfileManager,
-    InvalidProfileError,
-    CouldNotOverwriteError,
-    Profile,
-)
 from octoprint_mrbeam.software_update_information import (
     get_update_information,
     switch_software_channel,
