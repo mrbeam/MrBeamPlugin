@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-19 12:12+0200\n"
+"POT-Creation-Date: 2023-10-24 13:37+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -120,7 +120,7 @@ msgstr ""
 msgid "...and more!"
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/airfilter.py:652
+#: octoprint_mrbeam/iobeam/airfilter.py:654
 msgid "https://www.mr-beam.org/en/"
 msgstr ""
 
@@ -344,7 +344,7 @@ msgid "Do you still want to cancel?"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:64
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:225
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:226
 msgid "No"
 msgstr ""
 
@@ -354,7 +354,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:42
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:71
 #: octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:110
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:226
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:227
 msgid "Yes"
 msgstr ""
 
@@ -5074,7 +5074,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:14
 msgid ""
 "The pre filter filters all coarse particles from the exhaust air. Regular"
-" changing improves the air flow and preserves the main filter.*"
+" changing improves the air flow and preserves the main filter.**"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:21
@@ -5104,7 +5104,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:130
 msgid ""
 "The main filter is a combined hepa and activated carbon filter. It "
-"filters both tiny particles and odours from the exhaust air.*"
+"filters both tiny particles and odours from the exhaust air.**"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:70
@@ -5169,18 +5169,25 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:213
 msgid ""
-"*Users without a Mr Beam Air Filter System can safely ignore and reset "
-"this counter."
+"* Please beware that these values only represent average values. Check "
+"your filters regularly to make sure they are not yet full."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:221
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:214
+msgid ""
+"** If you use the Mr Beam Single without the Air Filter System, you can "
+"ignore this counter and reset it at any time. Please clean the fan of the"
+" exhaust air hose regularly."
+msgstr ""
+
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:222
 #, python-format
 msgid ""
 "The hour counter for the following component will now be reset: "
 "%(component_to_reset)s."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:222
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:223
 msgid "Please notice that there is no way to undo this operation"
 msgstr ""
 
