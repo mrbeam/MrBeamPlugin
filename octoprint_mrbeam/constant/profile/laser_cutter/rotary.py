@@ -16,8 +16,8 @@ profile = dict(
             111: 500, # Y Max rate, mm / min
             120: 30, # X Acceleration, mm / sec ^ 2
             121: 30, # Y Acceleration, mm / sec ^ 2
-            111: 500, # Y Max rate, mm / min
-            110: 500 # X Max rate, mm / min
+            130: 360, # X max travel, mm       # !! C-Series: 501.1
+            131: 200, # Y max travel, mm
         },
     ),
 )
