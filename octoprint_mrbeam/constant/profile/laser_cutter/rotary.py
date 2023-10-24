@@ -4,6 +4,12 @@ __all__ = ["profile"]
 
 profile = dict(
     id="rotary",
+    volume=dict(
+            depth=390.0,
+            width=500.0,
+            after_homing_shift_y=-80.0, # After homing shift in Y direction
+            after_homing_shift_rate=500, # After homing feed rate mm / min
+        ),
     grbl=dict(
         settings={
             120: 30, # X Acceleration, mm / sec ^ 2

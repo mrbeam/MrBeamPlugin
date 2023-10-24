@@ -419,7 +419,7 @@ $(function () {
         self.performHomingCycle = function (source) {
             let stateString = self.state ? self.state.stateString() : null;
             OctoPrint.printer
-                .home(["x", "y"])
+                .home()
                 .done(function () {
                     console.log(
                         "Homing call OK (source: " +

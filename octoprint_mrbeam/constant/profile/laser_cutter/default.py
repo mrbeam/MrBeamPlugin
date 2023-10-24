@@ -47,6 +47,9 @@ profile = dict(
         width=500.0,
         working_area_shift_x=7.0,
         working_area_shift_y=0.0,
+        after_homing_shift_x=0.0,
+        after_homing_shift_y=0.0,
+        after_homing_shift_rate=5000,
     ),
     grbl=dict(
         resetOnConnect=True,

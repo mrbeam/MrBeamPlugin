@@ -1683,7 +1683,7 @@ class MrBeamPlugin(
             return make_response("Laser: Serial not connected", 400)
 
         if self._printer.get_state_id() == "LOCKED":
-            self._printer.home("xy")
+            self._printer.home()
 
         seconds = 0
         while (
@@ -2715,7 +2715,7 @@ class MrBeamPlugin(
 
         if event == MrBeamEvents.BOOT_GRACE_PERIOD_END:
             if self.calibration_tool_mode:
-                self._printer.home("Homing before starting calibration tool")
+                self._printer.home()
                 self.lid_handler.onLensCalibrationStart()
 
         if event == OctoPrintEvents.ERROR:
