@@ -2848,7 +2848,7 @@ class MachineCom(object):
         except:
             self._logger.exception("Exception in _set_air_pressure() ")
 
-    def _set_compressor_pause(self, paused):
+    def _set_compressor_pause(self):
         try:
             _mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
         except:
