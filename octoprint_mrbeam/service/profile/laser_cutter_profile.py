@@ -43,7 +43,7 @@ def laser_cutter_profile_service(plugin=None, profile=default_profile):
 class LaserCutterProfileService(ProfileService):
     """ Service class for laser cutter profile. """
 
-    DEFAULT_PROFILE_ID = "profile_1"
+    DEFAULT_PROFILE_ID = "default"
 
     def __init__(self, id, profile):
         """Initialize laser cutter profile service.
