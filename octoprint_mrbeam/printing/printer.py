@@ -105,7 +105,7 @@ class Laser(Printer):
             z=0,
             after_homing_shift_x=printer_profile["volume"]["after_homing_shift_x"],
             after_homing_shift_y=printer_profile["volume"]["after_homing_shift_y"],
-            after_homing_shift_rate=printer_profile["volume"][after_homing_shift_rate],
+            after_homing_shift_rate=printer_profile["volume"]["after_homing_shift_rate"],
         )
         self._comm.rescue_from_home_pos()
         command = "G92X{x}Y{y}Z{z}".format(**params)
