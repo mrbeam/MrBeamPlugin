@@ -8,6 +8,8 @@ $(function () {
         window.mrbeam.viewModels["mrbStateModel"] = self;
 
         self.isCooling = ko.observable(undefined);
+        self.airfilter_model = ko.observable(undefined);
+        self.airfilter_serial = ko.observable(undefined);
 
         self.onEventReadyToLaserStart = function (payload) {
             /**
@@ -83,12 +85,19 @@ $(function () {
                 if ("cooling_mode" in mrb_state) {
                     self.isCooling(mrb_state["cooling_mode"]);
                 }
+                if ("airfilter_model" in mrb_state) {
+                    self.airfilter_model(mrb_state["airfilter_model"]);
+                }
+                if ("airfilter_serial" in mrb_state) {
+                    self.airfilter_serial(mrb_state["airfilter_serial"]);
+                }
             }
         };
     }
 
     OCTOPRINT_VIEWMODELS.push({
         construct: MrbStateViewModel,
-        elements: [""],
+        dependencies: [],
+        elements: [],
     });
 });

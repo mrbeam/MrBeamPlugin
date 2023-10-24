@@ -37,6 +37,13 @@ describe("Maintenance", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
+        cy.get('[data-test="maintenance-links-buy-now-heavy-duty-pre-filter"]')
+            .invoke("attr", "href")
+            .then((myLink) => {
+                cy.request(myLink).then((resp) => {
+                    expect(resp.status).to.eq(200);
+                });
+            });
     });
     // status code no exist
     it("Air Filter: Main-filter", function () {

@@ -24,14 +24,22 @@
                         </ul>
                         </div>
                     {% endif %}
+                    <div data-bind="visible: (airfilter_model() != undefined && airfilter_model() != 'Unknown')">
+                        <strong>{{ _('Air Filter System') }}:</strong>
+                        <ul class="list-unstyled">
+                            <li data-bind="visible: airfilter_model() != undefined && airfilter_model() != 'Unknown'">
+                                <strong>{{ _('Model') }}:</strong> <span data-bind="text: airfilter_model()"></span>
+                            </li>
+                        </ul>
+                    </div>
                     {% if mac_addrs %}
-                    <div><strong>{{ _('Network interfaces') }}:</strong>
-						<ul class="list-unstyled">
-							{% for ifc, mac in mac_addrs.iteritems() %}
-							<li>{{ ifc }} (MAC: {{ mac }})</li>
-							{% endfor %}
-						</ul>
-					</div>
+                        <div><strong>{{ _('Network interfaces') }}:</strong>
+                            <ul class="list-unstyled">
+                                {% for ifc, mac in mac_addrs.iteritems() %}
+                                    <li>{{ ifc }} (MAC: {{ mac }})</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     {% endif %}
                 </ul>
             </div>
@@ -56,8 +64,11 @@
                 <h5>Support data</h5>
                 <div class="controls">
                     <ul>
-                        <div><strong>Total usage:</strong> <span id="settings_mrbeam_about_support_total_usage_hours"></span> hrs</div>
-                        <div><strong>mrb_state:</strong> <span id="settings_mrbeam_about_support_mrb_state"></span></div>
+                        <div><strong>Total usage:</strong> <span
+                                id="settings_mrbeam_about_support_total_usage_hours"></span> hrs
+                        </div>
+                        <div><strong>mrb_state:</strong> <span id="settings_mrbeam_about_support_mrb_state"></span>
+                        </div>
                     </ul>
                 </div>
             </div>

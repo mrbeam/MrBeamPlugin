@@ -312,6 +312,8 @@ $(function () {
                 if ("fan_connected" in mrb_state) {
                     if (mrb_state["fan_connected"] !== null) {
                         self.is_fan_connected(mrb_state["fan_connected"]);
+                    } else {
+                        self.is_fan_connected(false);
                     }
                 }
                 if ("rtl_mode" in mrb_state) {

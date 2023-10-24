@@ -58,18 +58,14 @@ def test_show_hw_malfunction_notification(hw_malfunction_handler):
 @pytest.mark.parametrize(
     "malfunction_id, expected_notification_id",
     [
-        ("bottom_open", "err_bottom_open"),
         (
-            HwMalfunctionHandler.MALFUNCTION_ID_LASERHEADUNIT_MISSING,
-            "err_leaserheadunit_missing",
+            HwMalfunctionHandler.PCF_ANOMALY,
+            HwMalfunctionHandler.HARDWARE_MALFUNCTION_NON_I2C,
         ),
-        (HwMalfunctionHandler.HW_MANIPULATION, "err_interlock_malfunction"),
-        (HwMalfunctionHandler.FAN_NOT_SPINNING, "err_fan_not_spinning"),
-        (HwMalfunctionHandler.COMPRESSOR_MALFUNCTION, "err_compressor_malfunction"),
-        (HwMalfunctionHandler.ONEBUTTON_NOT_INITIALIZED, "err_one_button_malfunction"),
-        (HwMalfunctionHandler.PCF_ANOMALY, "err_hardware_malfunction_non_i2c"),
-        (HwMalfunctionHandler.I2C_BUS_MALFUNCTION, "err_hardware_malfunction_i2c"),
-        (HwMalfunctionHandler.I2C_DEVICE_MISSING, "err_hardware_malfunction_i2c"),
+        (
+            HwMalfunctionHandler.I2C_DEVICE_MISSING,
+            HwMalfunctionHandler.I2C_BUS_MALFUNCTION,
+        ),
     ],
 )
 def test_show_hw_malfunction_notification_known(
@@ -95,7 +91,44 @@ def test_show_hw_malfunction_notification_known(
         notification_id=expected_notification_id,
         replay=True,
         err_code="123",
-        # err_msg="123",
+    )
+
+
+@pytest.mark.parametrize(
+    "malfunction_id",
+    [
+        (HwMalfunctionHandler.MALFUNCTION_ID_BOTTOM_OPEN),
+        (HwMalfunctionHandler.MALFUNCTION_ID_LASERHEADUNIT_MISSING),
+        (HwMalfunctionHandler.HW_MANIPULATION),
+        (HwMalfunctionHandler.FAN_NOT_SPINNING),
+        (HwMalfunctionHandler.COMPRESSOR_MALFUNCTION),
+        (HwMalfunctionHandler.ONEBUTTON_NOT_INITIALIZED),
+        (HwMalfunctionHandler.I2C_BUS_MALFUNCTION),
+    ],
+)
+def test_show_hw_malfunction_notification_known_same_id(
+    malfunction_id, hw_malfunction_handler
+):
+    # Arrange
+    messages_to_show = {
+        malfunction_id: HwMalfunction(
+            malfunction_id,
+            "Malfunction 1",
+            {},
+            priority=1,
+            error_code="123",
+        ),
+    }
+    hw_malfunction_handler._messages_to_show = messages_to_show
+
+    # Act
+    hw_malfunction_handler.show_hw_malfunction_notification()
+
+    # Assert
+    hw_malfunction_handler._user_notification_system.get_notification.assert_called_with(
+        notification_id=malfunction_id,
+        replay=True,
+        err_code="123",
     )
 
 

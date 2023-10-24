@@ -1,5 +1,7 @@
 # pytest config file
 import os
+import threading
+import time
 
 import octoprint
 import pytest
@@ -8,7 +10,10 @@ from octoprint.events import EventManager, Events
 from octoprint.plugin import PluginManager
 
 from octoprint.settings import settings
-from octoprint_mrbeam import MrBeamPlugin
+from octoprint.util import monotonic_time
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+
+from octoprint_mrbeam import MrBeamPlugin, AirFilter
 
 sett = settings(init=True)  # Initialize octoprint settings, necessary for MrBeamPlugin
 
@@ -60,11 +65,75 @@ def mrbeam_plugin():
     mrbeam_plugin._basefolder = os.path.join(
         os.path.dirname(__package_path__), "octoprint_mrbeam"
     )
+    mrbeam_plugin._plugin_manager = MagicMock()
     mrbeam_plugin.laserhead_handler = MagicMock()
     mrbeam_plugin._event_bus.fire(Events.STARTUP)
     mrbeam_plugin.user_notification_system = MagicMock()
     mrbeam_plugin._printer = MagicMock()
     mrbeam_plugin.hw_malfunction_handler = MagicMock()
     mrbeam_plugin.is_boot_grace_period = MagicMock(return_value=False)
+    mrbeam_plugin.airfilter = MagicMock()
+    mrbeam_plugin.usage_handler = MagicMock()
 
     yield mrbeam_plugin
+
+
+def wait_till_event_received(event_bus, event, timeout=5):
+    event_done = threading.Event()
+
+    def event_callback(event, payload):
+        event_done.set()
+
+    event_bus.subscribe(event, event_callback)
+    starttime = monotonic_time()
+
+    while not event_done.is_set():
+        time.sleep(0.1)
+        assert round(monotonic_time() - starttime, 2) <= timeout
+
+
+@pytest.fixture
+def air_filter(mrbeam_plugin):
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter._plugin.send_mrb_state = MagicMock()
+
+    subscribe(
+        air_filter._event_bus,
+        MrBeamEvents.MRB_PLUGIN_INITIALIZED,
+        air_filter._event_bus.fire,
+        MrBeamEvents.MRB_PLUGIN_INITIALIZED,
+    )
+    return air_filter
+
+
+def subscribe(event_bus, event, func, *args, **kwargs):
+    debug = kwargs.get("debug", False)
+    timeout = kwargs.get("timeout", 5)
+    if debug:
+        print("subscribe called %s, (%s %s)", func, args, kwargs)
+
+    event_done = threading.Event()
+
+    def event_callback(event, payload):
+        if debug:
+            print("event_callback %s", event)
+        event_done.set()
+
+    event_bus.subscribe(event, event_callback)
+    starttime = monotonic_time()
+    if debug:
+        print("subscribed %s", event)
+
+    result = func(*args, **kwargs)
+    if debug:
+        print("function call")
+
+    while not event_done.is_set():
+        if debug:
+            print("waiting")
+        time.sleep(0.1)
+        assert round(monotonic_time() - starttime, 2) <= timeout
+
+    if debug:
+        print("done")
+    return result
