@@ -29,12 +29,13 @@ def laser_cutter_profile_service(plugin=None, profile=default_profile):
     global _instance
     if _instance is None:
         _instance = LaserCutterProfileService(id="laser_cutter", profile=LaserCutterProfileModel(profile).data)
-        # fire event to notify other plugins that the laser cutter profile is initialized
-        if plugin is not None:
-            plugin.fire_event(
-                MrBeamEvents.LASER_CUTTER_PROFILE_INITIALIZED,
-                dict(),
-            )
+
+    # fire event to notify other plugins that the laser cutter profile is initialized
+    if plugin is not None:
+        plugin.fire_event(
+            MrBeamEvents.LASER_CUTTER_PROFILE_INITIALIZED,
+            dict(),
+        )
 
     return _instance
 
