@@ -1215,8 +1215,15 @@ class IoBeamHandler(object):
                 MrBeamEvents.HARDWARE_MALFUNCTION,
                 dict(data=message),
             )
+        if (
+            message.get("id")
+            and message.get("id") in HwMalfunctionHandler.KNOWN_MALFUNCTIONS
+        ):
+            notification_id = message.get("id")
+        else:
+            notification_id = HwMalfunctionHandler.HARDWARE_MALFUNCTION_NON_I2C
         notification = self._user_notification_system.get_notification(
-            notification_id=HwMalfunctionHandler.HARDWARE_MALFUNCTION_NON_I2C,
+            notification_id=notification_id,
             err_code=malfunction.error_code,
             replay=True,
         )
