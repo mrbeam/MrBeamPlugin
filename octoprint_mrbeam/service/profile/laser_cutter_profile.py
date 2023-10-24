@@ -2,12 +2,13 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.service.profile.profile import ProfileService
 from octoprint_mrbeam.model.laser_cutter_profile import LaserCutterProfileModel
 from octoprint_mrbeam.constant.profile.laser_cutter.profile_1 import profile as default_profile
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # singleton instance of the LaserCutterProfileService class to be used across the application
 _instance = None
 
 
-def laser_cutter_profile_service(profile=default_profile):
+def laser_cutter_profile_service(plugin=None, profile=default_profile):
     """
     Get or create a singleton instance of the LaserCutterProfileService.
 
@@ -18,6 +19,7 @@ def laser_cutter_profile_service(profile=default_profile):
     Example Usage: laser_cutter_profile_service = laser_cutter_profile_service(plugin_instance)
 
     Args:
+        plugin (object): An object representing the MrBeamPlugin
         profile (dict): The default profile of the laser cutter.
 
     Returns:
@@ -27,6 +29,13 @@ def laser_cutter_profile_service(profile=default_profile):
     global _instance
     if _instance is None:
         _instance = LaserCutterProfileService(id="laser_cutter", profile=LaserCutterProfileModel(profile).data)
+        # fire event to notify other plugins that the laser cutter profile is initialized
+        if plugin is not None:
+            plugin.fire_event(
+                MrBeamEvents.LASER_CUTTER_PROFILE_INITIALIZED,
+                dict(),
+            )
+
     return _instance
 
 

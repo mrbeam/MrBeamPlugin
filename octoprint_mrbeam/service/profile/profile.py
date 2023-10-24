@@ -47,8 +47,6 @@ class ProfileService(object):
         self._current = None
         self._logger = mrb_logger("octoprint.plugins.mrbeam.service.profile.profile")
 
-        self._logger.info("Initializing profile service for id: {}".format(settings().getBaseFolder("base")))
-
         self._folder = os.path.join(
             settings().getBaseFolder("base"),
             "profiles",
@@ -77,7 +75,7 @@ class ProfileService(object):
         default_overrides["id"] = self.DEFAULT_PROFILE_ID
         self.save(default_overrides)
 
-        settings().set(["profiles", self._id, "defaultProfile"], None)
+        settings().set(["profiles", self._id, "defaultProfile"], None, force=True)
         settings().save()
 
         self._logger.info("Migrated default profile from settings to {}.profile: {!r}".format(self.DEFAULT_PROFILE_ID, default_overrides))
@@ -100,7 +98,7 @@ class ProfileService(object):
             else:
                 self._logger.error(
                     "Selected default profile {} does not exists, resetting to {}".format(default_id, self.DEFAULT_PROFILE_ID))
-                settings().set(["profiles", self._id, "default"], self.DEFAULT_PROFILE_ID)
+                settings().set(["profiles", self._id, "default"], self.DEFAULT_PROFILE_ID, force=True)
                 settings().save()
             default_id = self.DEFAULT_PROFILE_ID
 
@@ -164,7 +162,7 @@ class ProfileService(object):
         self._save_to_path(self._get_profile_path(identifier), profile, allow_overwrite=allow_overwrite)
 
         if make_default:
-            settings().set(["profiles", self._id, "default"], identifier)
+            settings().set(["profiles", self._id, "default"], identifier, force=True)
             settings().save()
 
         if self._current is not None and self._current["id"] == identifier:
@@ -201,11 +199,10 @@ class ProfileService(object):
         if identifier is not None and not identifier in all_identifiers:
             return
 
-        settings().set(["profiles", self._id, "default"], identifier)
+        settings().set(["profiles", self._id, "default"], identifier, force=True)
         settings().save()
 
     def get_current_or_default(self):
-        self._logger.info("get_current_or_default: {}".format(self._current))
         if self._current is not None:
             return self._current
         else:

@@ -200,6 +200,7 @@ class MrBeamPlugin(
 
         self._iobeam_connected = False
         self._laserhead_ready = False
+        self._laser_cutter_profile_initialized = False
 
         self._boot_grace_period_counter = 0
 
@@ -236,6 +237,7 @@ class MrBeamPlugin(
         self._event_bus.subscribe(
             MrBeamEvents.LASER_HEAD_READ, self._on_laserhead_ready
         )
+        self._event_bus.subscribe(MrBeamEvents.LASER_CUTTER_PROFILE_INITIALIZED, self._on_laser_cutter_profile_initialized)
 
         self.start_time_ntp_timer()
 
@@ -265,7 +267,7 @@ class MrBeamPlugin(
 
         self.analytics_handler = analyticsHandler(self)
         self._laser_cutter_mode_service = laser_cutter_mode_service(self)
-        self.laser_cutter_profile_service = laser_cutter_profile_service()
+        self.laser_cutter_profile_service = laser_cutter_profile_service(self)
         self.update_laser_cutter_profile_service()
         self.user_notification_system = user_notification_system(self)
         self.onebutton_handler = oneButtonHandler(self)
@@ -307,7 +309,8 @@ class MrBeamPlugin(
             self._logger.info("Laser cutter profile already exists.")
         else:
             self._logger.info("Laser cutter profile does not exist. Creating it.")
-            self.laser_cutter_profile_service.save(corresponding_laser_cutter_profile)
+            self.laser_cutter_profile_service.save(corresponding_laser_cutter_profile, allow_overwrite=True, make_default=True)
+        self.laser_cutter_profile_service.set_default(corresponding_laser_cutter_profile_id)
         self.laser_cutter_profile_service.select(corresponding_laser_cutter_profile_id)
 
     def get_corresponding_laser_cutter_profile(self):
@@ -353,11 +356,26 @@ class MrBeamPlugin(
         self._laserhead_ready = True
         self._try_to_connect_laser()
 
+    def _on_laser_cutter_profile_initialized(self, *args, **kwargs):
+        """Called when the laser cutter profile is initialized is initialized.
+
+        Args:
+            *args:
+            **kwargs:
+
+        Returns:
+
+        """
+        self._logger.info("MrBeamPlugin on_laser_cutter_profile_initialized")
+        self._laser_cutter_profile_initialized = True
+        self._try_to_connect_laser()
+
     def _try_to_connect_laser(self):
         """Tries to connect the laser if both iobeam and laserhead are ready and the laser is not connected yet."""
         if (
                 self._iobeam_connected
                 and self._laserhead_ready
+                and self._laser_cutter_profile_initialized
                 and self._printer.is_closed_or_error()
         ):
             self._printer.connect(profile=self.laser_cutter_profile_service.get_current_or_default())
