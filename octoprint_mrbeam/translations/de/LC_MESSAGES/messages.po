@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-19 12:12+0200\n"
-"PO-Revision-Date: 2023-10-19 12:13+0200\n"
+"POT-Creation-Date: 2023-10-24 13:37+0200\n"
+"PO-Revision-Date: 2023-10-24 13:38+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -123,7 +123,7 @@ msgid "...and more!"
 msgstr "...und mehr!"
 
 # don’t change the link
-#: octoprint_mrbeam/iobeam/airfilter.py:652
+#: octoprint_mrbeam/iobeam/airfilter.py:654
 msgid "https://www.mr-beam.org/en/"
 msgstr "https://www.mr-beam.org/"
 
@@ -390,7 +390,7 @@ msgid "Do you still want to cancel?"
 msgstr "Willst du immer noch abbrechen?"
 
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:64
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:225
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:226
 msgid "No"
 msgstr "Nein"
 
@@ -400,7 +400,7 @@ msgstr "Nein"
 #: octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:42
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:71
 #: octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:110
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:226
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:227
 msgid "Yes"
 msgstr "Ja"
 
@@ -5969,10 +5969,10 @@ msgstr "Air Filter: Vorfilter"
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:14
 msgid ""
 "The pre filter filters all coarse particles from the exhaust air. Regular "
-"changing improves the air flow and preserves the main filter.*"
+"changing improves the air flow and preserves the main filter.**"
 msgstr ""
 "Der Vorfilter filtert alle groben Partikel aus der Abluft. Ein regelmäßiger "
-"Wechsel verbessert den Luftdurchsatz und schont den Hauptfilter. *"
+"Wechsel verbessert den Luftdurchsatz und schont den Hauptfilter. **"
 
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:21
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:50
@@ -6001,10 +6001,10 @@ msgstr "Air Filter: Hauptfilter"
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:130
 msgid ""
 "The main filter is a combined hepa and activated carbon filter. It filters "
-"both tiny particles and odours from the exhaust air.*"
+"both tiny particles and odours from the exhaust air.**"
 msgstr ""
 "Der Hauptfilter ist ein kombinierter Hepa- und Aktivkohlefilter. Er filtert "
-"sowohl winzig kleine Partikel, als auch die Gerüche aus der Abluft. *"
+"sowohl winzig kleine Partikel, als auch die Gerüche aus der Abluft. **"
 
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:70
 msgid ""
@@ -6082,13 +6082,23 @@ msgstr "Pflege der mechanischen Teile"
 
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:213
 msgid ""
-"*Users without a Mr Beam Air Filter System can safely ignore and reset this "
-"counter."
+"* Please beware that these values only represent average values. Check your "
+"filters regularly to make sure they are not yet full."
 msgstr ""
-"* Benutzer ohne Mr. Beam Air Filter System können diesen Zähler ignorieren "
-"und zurücksetzen."
+"* Bitte beachte, dass diese Werte nur Durchschnittswerte darstellen. Prüfe "
+"deine Filter regelmäßig, um sicherzustellen, dass sie noch nicht voll sind."
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:221
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:214
+msgid ""
+"** If you use the Mr Beam Single without the Air Filter System, you can "
+"ignore this counter and reset it at any time. Please clean the fan of the "
+"exhaust air hose regularly."
+msgstr ""
+"** Wenn du den Mr Beam Single ohne das Air Filter System verwendest, kannst "
+"du diesen Zähler ignorieren und jederzeit zurücksetzen. Bitte reinige den "
+"Lüfter des Abluftschlauchs regelmäßig."
+
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:222
 #, python-format
 msgid ""
 "The hour counter for the following component will now be reset: "
@@ -6097,7 +6107,7 @@ msgstr ""
 "Der Stundenzähler für folgende Komponente wird zurückgesetzt: "
 "%(component_to_reset)s."
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:222
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:223
 msgid "Please notice that there is no way to undo this operation"
 msgstr "Dies kann nicht rückgängig gemacht werden"
 
@@ -6671,6 +6681,13 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:12
 msgid "We hope you enjoy this new experience!"
 msgstr "Wir hoffen, dass Du viel Freude mit diesem Update hast!"
+
+#~ msgid ""
+#~ "*Users without a Mr Beam Air Filter System can safely ignore and reset "
+#~ "this counter."
+#~ msgstr ""
+#~ "* Benutzer ohne Mr. Beam Air Filter System können diesen Zähler "
+#~ "ignorieren und zurücksetzen."
 
 #, python-format
 #~ msgid "/%(lifespan)s hrs"

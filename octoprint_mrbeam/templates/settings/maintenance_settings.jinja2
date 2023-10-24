@@ -11,7 +11,7 @@
                     <div data-tooltip-image="/plugin/mrbeam/static/img/air_filter/af3-prefilter.png">
                         <h4>{{ _('Air Filter: Pre-filter') }}</h4>
                         <small class="maintenance-description">
-                            {{ _('The pre filter filters all coarse particles from the exhaust air. Regular changing improves the air flow and preserves the main filter.*') }}
+                            {{ _('The pre filter filters all coarse particles from the exhaust air. Regular changing improves the air flow and preserves the main filter.**') }}
                         </small>
                     </div>
                     <div class="maintenance-links" data-bind="visible: shopifyLink('prefilter', 0)">
@@ -28,7 +28,7 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: prefilterPercent() + ' %', style: {color: prefilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
+                    <h3><span data-bind="text: prefilterPercent() + ' %', style: {color: prefilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span><span class="muted">*</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
 
@@ -40,7 +40,7 @@
                     <div data-tooltip-image="/plugin/mrbeam/static/img/air_filter/af3-mainfilter.png">
                         <h4>{{ _('Air Filter: Main filter') }}</h4>
                         <small class="maintenance-description">
-                            {{ _('The main filter is a combined hepa and activated carbon filter. It filters both tiny particles and odours from the exhaust air.*') }}
+                            {{ _('The main filter is a combined hepa and activated carbon filter. It filters both tiny particles and odours from the exhaust air.**') }}
                         </small>
                     </div>
                     <div class="maintenance-links" data-bind="visible: shopifyLink('carbonfilter', 0)">
@@ -57,7 +57,7 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: carbonFilterPercent() + ' %', style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
+                    <h3><span data-bind="text: carbonFilterPercent() + ' %', style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span><span class="muted">*</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
                 </td>
@@ -116,7 +116,7 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: prefilterPercent() + ' %', style: {color: prefilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
+                    <h3><span data-bind="text: prefilterPercent() + ' %', style: {color: prefilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span><span class="muted small">*</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
                     <button class="btn maintenance-reset-btn" data-test="maintenance-reset-button-pre-filter" data-bind="click: resetPrefilterUsage">{{ _('Reset') }}</button>
@@ -127,7 +127,7 @@
                 <td class="maintenance-description-column">
                     <h4>{{ _('Air Filter: Main filter') }}</h4>
                     <small class="maintenance-description">
-                        {{ _('The main filter is a combined hepa and activated carbon filter. It filters both tiny particles and odours from the exhaust air.*') }}
+                        {{ _('The main filter is a combined hepa and activated carbon filter. It filters both tiny particles and odours from the exhaust air.**') }}
                     </small>
                     <div class="maintenance-links"  data-bind="visible: shopifyLink('carbonfilter', 0)">
                         <a data-bind="attr: {href: shopifyLink('carbonfilter', 0)}"
@@ -143,7 +143,7 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: carbonFilterPercent() + ' %', style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
+                    <h3><span data-bind="text: carbonFilterPercent() + ' %', style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span><span class="muted">*</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
                     <button class="btn maintenance-reset-btn" data-test="maintenance-reset-button-carbon-filter" data-bind="click: resetCarbonFilterUsage">{{ _('Reset') }}</button>
@@ -176,7 +176,7 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: laserHeadPercent() + ' %', style: {color: laserHeadShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
+                    <h3><span data-bind="text: laserHeadPercent() + ' %', style: {color: laserHeadShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span><span class="muted">*</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
                     <button class="btn maintenance-reset-btn" data-test="maintenance-reset-button-laser-head" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
@@ -203,14 +203,15 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: gantryPercent() + ' %', style: {color: gantryShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
+                    <h3><span data-bind="text: gantryPercent() + ' %', style: {color: gantryShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span><span class="muted">*</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
                     <button class="btn maintenance-reset-btn" data-test="maintenance-reset-button-gantry" data-bind="click: resetGantryUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
         </table>
-        <small class="muted">{{ _('*Users without a Mr Beam Air Filter System can safely ignore and reset this counter.') }}</small>
+        <small class="muted">{{ _('* Please beware that these values only represent average values. Check your filters regularly to make sure they are not yet full.') }}</small><br>
+        <small class="muted">{{ _('** If you use the Mr Beam Single without the Air Filter System, you can ignore this counter and reset it at any time. Please clean the fan of the exhaust air hose regularly.') }}</small>
     </div>
 
     <div id="reset_counter_are_you_sure" class="modal hide fade">
