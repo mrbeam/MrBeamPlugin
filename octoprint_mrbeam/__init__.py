@@ -303,14 +303,8 @@ class MrBeamPlugin(
         self._printer.register_user_notification_system(self.user_notification_system)
 
     def update_laser_cutter_profile(self, profile):
-        profile_id = profile['id']
-        if self.laser_cutter_profile_service.exists(profile_id):
-            self._logger.info("Laser cutter profile already exists.")
-        else:
-            self._logger.info("Laser cutter profile does not exist. Creating it.")
-            self.laser_cutter_profile_service.save(profile, allow_overwrite=True)
-        self.laser_cutter_profile_service.set_default(profile_id)
-        self.laser_cutter_profile_service.select(profile_id)
+        self.laser_cutter_profile_service.save(profile, allow_overwrite=True, make_default=True)
+        self.laser_cutter_profile_service.select(profile['id'])
 
     def get_laser_cutter_profile_for_current_configuration(self):
         laser_cutter_mode = self.get_laser_cutter_mode()
