@@ -3,7 +3,7 @@
 __all__ = ["profile"]
 
 profile = dict(
-    id="profile_3",
+    id="rotary",
     grbl=dict(
         settings={
             110: 500.000,  # x max rate, mm/min

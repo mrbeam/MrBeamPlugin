@@ -1,7 +1,7 @@
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.service.profile.profile import ProfileService
 from octoprint_mrbeam.model.laser_cutter_profile import LaserCutterProfileModel
-from octoprint_mrbeam.constant.profile.laser_cutter.profile_1 import profile as default_profile
+from octoprint_mrbeam.constant.profile.laser_cutter import default_profile
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # singleton instance of the LaserCutterProfileService class to be used across the application

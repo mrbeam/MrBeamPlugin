@@ -112,7 +112,7 @@ from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
 from octoprint_mrbeam.util.version_comparator import compare_pep440_versions
-from octoprint_mrbeam.constant.profile import laser_cutter
+from octoprint_mrbeam.constant.profile import laser_cutter as laser_cutter_profiles
 from octoprint_mrbeam.enums.laser_cutter_mode import LaserCutterModeEnum
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
@@ -268,7 +268,7 @@ class MrBeamPlugin(
         self.analytics_handler = analyticsHandler(self)
         self._laser_cutter_mode_service = laser_cutter_mode_service(self)
         self.laser_cutter_profile_service = laser_cutter_profile_service(self)
-        self.update_laser_cutter_profile_service()
+        self.update_laser_cutter_profile(self.get_laser_cutter_profile_for_current_configuration())
         self.user_notification_system = user_notification_system(self)
         self.onebutton_handler = oneButtonHandler(self)
         self.interlock_handler = interLockHandler(self)
@@ -302,28 +302,29 @@ class MrBeamPlugin(
         self._do_initial_log()
         self._printer.register_user_notification_system(self.user_notification_system)
 
-    def update_laser_cutter_profile_service(self):
-        corresponding_laser_cutter_profile = self.get_corresponding_laser_cutter_profile()
-        corresponding_laser_cutter_profile_id = corresponding_laser_cutter_profile['id']
-        if self.laser_cutter_profile_service.exists(corresponding_laser_cutter_profile_id):
+    def update_laser_cutter_profile(self, profile):
+        profile_id = profile['id']
+        if self.laser_cutter_profile_service.exists(profile_id):
             self._logger.info("Laser cutter profile already exists.")
         else:
             self._logger.info("Laser cutter profile does not exist. Creating it.")
-            self.laser_cutter_profile_service.save(corresponding_laser_cutter_profile, allow_overwrite=True, make_default=True)
-        self.laser_cutter_profile_service.set_default(corresponding_laser_cutter_profile_id)
-        self.laser_cutter_profile_service.select(corresponding_laser_cutter_profile_id)
+            self.laser_cutter_profile_service.save(profile, allow_overwrite=True)
+        self.laser_cutter_profile_service.set_default(profile_id)
+        self.laser_cutter_profile_service.select(profile_id)
 
-    def get_corresponding_laser_cutter_profile(self):
-        if self.get_laser_cutter_mode() == LaserCutterModeEnum.DEFAULT.value and self._device_info.get_series() != "2C":
-            return laser_cutter.profile_1.profile
-        elif self.get_laser_cutter_mode() == LaserCutterModeEnum.DEFAULT.value and self._device_info.get_series() == "2C":
-            return dict_merge(laser_cutter.profile_1.profile, laser_cutter.profile_2.profile)
-        elif self.get_laser_cutter_mode() == LaserCutterModeEnum.ROTARY.value and self._device_info.get_series() != "2C":
-            return dict_merge(laser_cutter.profile_1.profile, laser_cutter.profile_3.profile)
-        elif self.get_laser_cutter_mode() == LaserCutterModeEnum.ROTARY.value and self._device_info.get_series() == "2C":
-            return dict_merge(laser_cutter.profile_1.profile, dict_merge(laser_cutter.profile_2.profile, laser_cutter.profile_3.profile))
-        else:
-            return laser_cutter.profile_1.profile
+    def get_laser_cutter_profile_for_current_configuration(self):
+        laser_cutter_mode = self.get_laser_cutter_mode()
+        device_series = self._device_info.get_series()
+        profile = laser_cutter_profiles.default_profile
+        if laser_cutter_mode == LaserCutterModeEnum.DEFAULT.value:
+            if device_series == "2C":
+                profile = laser_cutter_profiles.series_2c
+        elif laser_cutter_mode == LaserCutterModeEnum.ROTARY.value:
+            profile = laser_cutter_profiles.rotary_profile
+            if device_series == "2C":
+                profile = laser_cutter_profiles.series_2c_rotary_profile
+        return profile
+
 
     def get_settings(self):
         return self._settings
