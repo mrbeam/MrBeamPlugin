@@ -6,9 +6,10 @@ profile = dict(
     id="rotary",
     grbl=dict(
         settings={
-            110: 500.000,  # x max rate, mm/min
-            111: 500.000,  # y max rate, mm/min
-            112: 500.000,  # z max rate, mm/min
+            120: 30, # X Acceleration, mm / sec ^ 2
+            121: 30, # Y Acceleration, mm / sec ^ 2
+            111: 500, # Y Max rate, mm / min
+            110: 500 # X Max rate, mm / min
         },
     ),
 )
