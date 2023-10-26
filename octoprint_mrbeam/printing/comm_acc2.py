@@ -144,7 +144,7 @@ class MachineCom(object):
     pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
     def __init__(
-        self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None
+        self, port=None, baudrate=None, callbackObject=None, printerProfileManager=laser_cutter_profile_service()
     ):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
 
@@ -1536,7 +1536,7 @@ class MachineCom(object):
                         )
                         commands.append("${id}={val}".format(id=id, val=value))
                     elif my_grbl_settings[id]["value"] != value:
-                        self._logger.error(
+                        self._logger.warn(
                             "GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
                             id,
                             my_grbl_settings[id]["value"],

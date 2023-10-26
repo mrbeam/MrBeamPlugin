@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+from octoprint_mrbeam.enums.device_series import DeviceSeriesEnum
 
 profile = dict(
-    id="series_2c",
+    id="series_" + DeviceSeriesEnum.C.value,
     model="C",
     legacy=dict(
         job_done_home_position_x=250,

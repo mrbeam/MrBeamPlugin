@@ -115,8 +115,7 @@ $(function () {
         self.onStartup = function () {
             self.requestData();
             self.control.showZAxis = ko.computed(function () {
-                var has = self.currentProfileData()["zAxis"];
-                return has;
+                return self.currentProfileData()["zAxis"];
             }); // dependency injection
         };
     }

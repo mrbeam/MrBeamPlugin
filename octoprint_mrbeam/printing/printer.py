@@ -49,6 +49,8 @@ class Laser(Printer):
             current_z=None,
         )
         self._user_notification_system = None
+
+        # We are overriding this attribute that is used in OctoPrint's Printer class
         self._printerProfileManager = laser_cutter_profile_service()
 
         self._event_bus = eventManager()
@@ -94,8 +96,24 @@ class Laser(Printer):
         self._comm.setColors(currentFileName, value)
 
     # extend commands: home, position, increase_passes, decrease_passes
-    # The parameter axes is not used, but kept for compatibility with the original implementation.
     def home(self, axes="xy"):
+        """
+        Home the printer.
+        Commands to be sent to the printer in order to home:
+            Command 1: "$H" = Move to home position
+            Command 2: command = set coordinate origin
+            Command 3: "G21" = set units to millimeters
+            Command 4: "G91" = set relative coordinate mode
+            Command 5: moving_command = move to after homing position
+            Command 6: "G90" = set absolute coordinate mode
+
+        Args:
+            axes: axes to home, default is "xy"
+            This is not used in the plugin, but kept for compatibility with the original implementation
+
+        Returns:
+            None
+        """
         printer_profile = self._printerProfileManager.get_current_or_default()
         params = dict(
             x=printer_profile["volume"]["width"]
@@ -113,15 +131,6 @@ class Laser(Printer):
         # Moving command after homing
         moving_command = "G1X{after_homing_shift_x}Y{after_homing_shift_y}F{after_homing_shift_rate}".format(**params)
 
-        """
-        Commands to be sent to the printer in order to home:
-            Command 1: "$H" = Move to home position
-            Command 2: command = set coordinate origin
-            Command 3: "G21" = set units to millimeters
-            Command 4: "G91" = set relative coordinate mode
-            Command 5: moving_command = move to after homing position
-            Command 6: "G90" = set absolute coordinate mode
-        """
         self.commands(["$H", command, "G21", "G91", moving_command, "G90"])
 
     def is_homed(self):

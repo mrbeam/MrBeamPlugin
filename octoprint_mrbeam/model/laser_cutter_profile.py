@@ -3,7 +3,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 class LaserCutterProfileModel(object):
     """Laser cutter profile model."""
 
-    def __init__(self, profile={}):
+    def __init__(self, profile=None):
         """Initialize laser cutter profile.
 
         If the profile is not found in the defined profiles, it will fall back to default.

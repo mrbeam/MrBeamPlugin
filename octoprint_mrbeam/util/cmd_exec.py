@@ -26,7 +26,9 @@ def exec_cmd(cmd, log=True, shell=True, loglvl=DEBUG):
             e,
         )
         return None
-    if code != 0 and log:
+    if code == -15:
+        _logger.warn("cmd= '{}', return code: {}".format(cmd, code))
+    elif code != 0 and log:
         _logger.error("cmd= '{}', return code: {}".format(cmd, code))
     return code == 0
 

@@ -629,16 +629,16 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def auto_update_grbl(self):
         self._logger.info("auto_update_grbl() ")
-        laserCutterProfile = laser_cutter_profile_service().get_current_or_default()
-        if laserCutterProfile:
-            laserCutterProfile["grbl"][
+        laser_cutter_profile = laser_cutter_profile_service().get_current_or_default()
+        if laser_cutter_profile:
+            laser_cutter_profile["grbl"][
                 "auto_update_version"
             ] = self.GRBL_AUTO_UPDATE_VERSION
-            laserCutterProfile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
-            laser_cutter_profile_service().save(laserCutterProfile, allow_overwrite=True)
+            laser_cutter_profile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
+            laser_cutter_profile_service().save(laser_cutter_profile, allow_overwrite=True)
         else:
             raise MigrationException(
-                "Error while configuring grbl update - no lasercutterProfile",
+                "Error while configuring grbl update - no laser_cutter_profile",
             )
 
     def inflate_file_system(self):

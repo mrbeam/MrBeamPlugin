@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from octoprint.util import dict_merge
-from . import default, series_2c, rotary, series_2c_rotary
+from octoprint_mrbeam.constant.profile.laser_cutter import default, series_2c, rotary, series_2c_rotary
 
 # Default profile for the Mr beam laser cutter in default mode and a non-2C series
 default_profile = default.profile

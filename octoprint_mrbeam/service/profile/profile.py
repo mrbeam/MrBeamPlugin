@@ -40,8 +40,9 @@ class ProfileService(object):
     """
 
     DEFAULT_PROFILE_ID = "_default"
+    PROFILE_CONFIGURATION_FILE_ENDING = ".profile"
 
-    def __init__(self, id="", default={}):
+    def __init__(self, id="", default=None):
         self._default = default
         self._id = id
         self._current = None
@@ -138,9 +139,7 @@ class ProfileService(object):
             return None
 
     def remove(self, identifier):
-        if self._current is not None and self._current["id"] == identifier:
-            return False
-        elif settings().get(["profiles", self._id, "default"]) == identifier:
+        if (self._current is not None and self._current["id"] == identifier) or settings().get(["profiles", self._id, "default"]) == identifier:
             return False
         return self._remove_from_path(self._get_profile_path(identifier))
 
@@ -180,7 +179,7 @@ class ProfileService(object):
     @property
     def last_modified(self):
         dates = [os.stat(self._folder).st_mtime]
-        dates += [entry.stat().st_mtime for entry in scandir(self._folder) if entry.name.endswith(".profile")]
+        dates += [entry.stat().st_mtime for entry in scandir(self._folder) if entry.name.endswith(self.PROFILE_CONFIGURATION_FILE_ENDING)]
         return max(dates)
 
     def get_default(self):
@@ -196,7 +195,7 @@ class ProfileService(object):
 
     def set_default(self, identifier):
         all_identifiers = self._load_all_identifiers().keys()
-        if identifier is not None and not identifier in all_identifiers:
+        if identifier is not None and identifier not in all_identifiers:
             return
 
         settings().set(["profiles", self._id, "default"], identifier, force=True)
@@ -237,13 +236,13 @@ class ProfileService(object):
     def _load_all_identifiers(self):
         results = dict()
         for entry in scandir(self._folder):
-            if is_hidden_path(entry.name) or not entry.name.endswith(".profile"):
+            if is_hidden_path(entry.name) or not entry.name.endswith(self.PROFILE_CONFIGURATION_FILE_ENDING):
                 continue
 
             if not entry.is_file():
                 continue
 
-            identifier = entry.name[:-len(".profile")]
+            identifier = entry.name[:-len(self.PROFILE_CONFIGURATION_FILE_ENDING)]
             results[identifier] = entry.path
         return results
 
@@ -261,10 +260,10 @@ class ProfileService(object):
         if self._migrate_profile(profile):
             try:
                 self._save_to_path(path, profile, allow_overwrite=True)
-            except:
+            except Exception as e:
                 self._logger.exception(
-                    "Tried to save profile to {path} after migrating it while loading, ran into exception".format(
-                        path=path))
+                    "Tried to save profile to {path} after migrating it while loading, ran into exception: {e}".format(
+                        path=path, e=e))
 
         profile = self._ensure_valid_profile(profile)
 
@@ -294,7 +293,10 @@ class ProfileService(object):
         try:
             os.remove(path)
             return True
-        except:
+        except Exception as e:
+            self._logger.warn(
+                "Tried to remove profile from {path}, ran into exception: {e}".format(
+                    path=path, e=e))
             return False
 
     def _get_profile_path(self, identifier):
@@ -317,166 +319,10 @@ class ProfileService(object):
         """
         Subclasses must override this method.
         """
-        return False
-        # raise NotImplementedError("Subclasses must implement _migrate_profile.")
-
-        # # make sure profile format is up to date
-        # modified = False
-        #
-        # if "volume" in profile and "formFactor" in profile["volume"] and not "origin" in profile["volume"]:
-        # 	profile["volume"]["origin"] = BedOrigin.CENTER if profile["volume"]["formFactor"] == BedTypes.CIRCULAR else BedOrigin.LOWERLEFT
-        # 	modified = True
-        #
-        # if "volume" in profile and not "custom_box" in profile["volume"]:
-        # 	profile["volume"]["custom_box"] = False
-        # 	modified = True
-        #
-        # if "extruder" in profile and not "sharedNozzle" in profile["extruder"]:
-        # 	profile["extruder"]["sharedNozzle"] = False
-        # 	modified = True
-        #
-        # if "extruder" in profile and "sharedNozzle" in profile["extruder"] and profile["extruder"]["sharedNozzle"]:
-        # 	profile["extruder"]["offsets"] = [(0.0, 0.0)]
-        # 	modified = True
-        #
-        # return modified
+        raise NotImplementedError("Subclasses must implement _migrate_profile")
 
     def _ensure_valid_profile(self, profile):
         """
         Subclasses must override this method.
         """
-        return profile
-        # raise NotImplementedError("Subclasses must implement _ensure_valid_profile.")
-
-        # # ensure all keys are present
-        # if not dict_contains_keys(self._default, profile):
-        #     self._logger.warn("Profile invalid, missing keys. Expected: {expected!r}. Actual: {actual!r}".format(
-        #         expected=self._default.keys(), actual=profile.keys()))
-        #     return False
-        #
-        # # conversion helper
-        # def convert_value(profile, path, converter):
-        #     value = profile
-        #     for part in path[:-1]:
-        #         if not isinstance(value, dict) or not part in value:
-        #             raise RuntimeError("%s is not contained in profile" % ".".join(path))
-        #         value = value[part]
-        #
-        #     if not isinstance(value, dict) or not path[-1] in value:
-        #         raise RuntimeError("%s is not contained in profile" % ".".join(path))
-        #
-        #     value[path[-1]] = converter(value[path[-1]])
-        #
-        # # convert ints
-        # for path in (("extruder", "count"), ("axes", "x", "speed"), ("axes", "y", "speed"), ("axes", "z", "speed")):
-        #     try:
-        #         convert_value(profile, path, int)
-        #     except Exception as e:
-        #         self._logger.warn(
-        #             "Profile has invalid value for path {path!r}: {msg}".format(path=".".join(path), msg=str(e)))
-        #         return False
-        #
-        # # convert floats
-        # for path in (("volume", "width"), ("volume", "depth"), ("volume", "height"), ("extruder", "nozzleDiameter")):
-        #     try:
-        #         convert_value(profile, path, float)
-        #     except Exception as e:
-        #         self._logger.warn(
-        #             "Profile has invalid value for path {path!r}: {msg}".format(path=".".join(path), msg=str(e)))
-        #         return False
-        #
-        # # convert booleans
-        # for path in (
-        # ("axes", "x", "inverted"), ("axes", "y", "inverted"), ("axes", "z", "inverted"), ("extruder", "sharedNozzle")):
-        #     try:
-        #         convert_value(profile, path, bool)
-        #     except Exception as e:
-        #         self._logger.warn(
-        #             "Profile has invalid value for path {path!r}: {msg}".format(path=".".join(path), msg=str(e)))
-        #         return False
-        #
-        # # validate form factor
-        # if not profile["volume"]["formFactor"] in BedTypes.values():
-        #     self._logger.warn("Profile has invalid value volume.formFactor: {formFactor}".format(
-        #         formFactor=profile["volume"]["formFactor"]))
-        #     return False
-        #
-        # # validate origin type
-        # if not profile["volume"]["origin"] in BedOrigin.values():
-        #     self._logger.warn(
-        #         "Profile has invalid value in volume.origin: {origin}".format(origin=profile["volume"]["origin"]))
-        #     return False
-        #
-        # # ensure origin and form factor combination is legal
-        # if profile["volume"]["formFactor"] == BedTypes.CIRCULAR and not profile["volume"]["origin"] == BedOrigin.CENTER:
-        #     profile["volume"]["origin"] = BedOrigin.CENTER
-        #
-        # # force width and depth of volume to be identical for circular beds, with width being the reference
-        # if profile["volume"]["formFactor"] == BedTypes.CIRCULAR:
-        #     profile["volume"]["depth"] = profile["volume"]["width"]
-        #
-        # # if we have a custom bounding box, validate it
-        # if profile["volume"]["custom_box"] and isinstance(profile["volume"]["custom_box"], dict):
-        #     if not len(profile["volume"]["custom_box"]):
-        #         profile["volume"]["custom_box"] = False
-        #
-        #     else:
-        #         default_box = self._default_box_for_volume(profile["volume"])
-        #         for prop, limiter in (("x_min", min), ("y_min", min), ("z_min", min),
-        #                               ("x_max", max), ("y_max", max), ("z_max", max)):
-        #             if prop not in profile["volume"]["custom_box"] or profile["volume"]["custom_box"][prop] is None:
-        #                 profile["volume"]["custom_box"][prop] = default_box[prop]
-        #             else:
-        #                 value = profile["volume"]["custom_box"][prop]
-        #                 try:
-        #                     value = limiter(float(value), default_box[prop])
-        #                     profile["volume"]["custom_box"][prop] = value
-        #                 except:
-        #                     self._logger.warn(
-        #                         "Profile has invalid value in volume.custom_box.{}: {!r}".format(prop, value))
-        #                     return False
-        #
-        #         # make sure we actually do have a custom box and not just the same values as the
-        #         # default box
-        #         for prop in profile["volume"]["custom_box"]:
-        #             if profile["volume"]["custom_box"][prop] != default_box[prop]:
-        #                 break
-        #         else:
-        #             # exactly the same as the default box, remove custom box
-        #             profile["volume"]["custom_box"] = False
-        #
-        # # validate offsets
-        # offsets = []
-        # for offset in profile["extruder"]["offsets"]:
-        #     if not len(offset) == 2:
-        #         self._logger.warn("Profile has an invalid extruder.offsets entry: {entry!r}".format(entry=offset))
-        #         return False
-        #     x_offset, y_offset = offset
-        #     try:
-        #         offsets.append((float(x_offset), float(y_offset)))
-        #     except:
-        #         self._logger.warn(
-        #             "Profile has an extruder.offsets entry with non-float values: {entry!r}".format(entry=offset))
-        #         return False
-        # profile["extruder"]["offsets"] = offsets
-        #
-        # return profile
-
-    # @staticmethod
-    # def _default_box_for_volume(volume):
-    #     if volume["origin"] == BedOrigin.CENTER:
-    #         half_width = volume["width"] / 2.0
-    #         half_depth = volume["depth"] / 2.0
-    #         return dict(x_min=-half_width,
-    #                     x_max=half_width,
-    #                     y_min=-half_depth,
-    #                     y_max=half_depth,
-    #                     z_min=0.0,
-    #                     z_max=volume["height"])
-    #     else:
-    #         return dict(x_min=0.0,
-    #                     x_max=volume["width"],
-    #                     y_min=0.0,
-    #                     y_max=volume["depth"],
-    #                     z_min=0.0,
-    #                     z_max=volume["height"])
+        raise NotImplementedError("Subclasses must implement _ensure_valid_profile.")

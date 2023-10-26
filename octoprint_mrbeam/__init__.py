@@ -108,6 +108,7 @@ from octoprint_mrbeam import camera
 from octoprint_mrbeam.util.version_comparator import compare_pep440_versions
 from octoprint_mrbeam.constant.profile import laser_cutter as laser_cutter_profiles
 from octoprint_mrbeam.enums.laser_cutter_mode import LaserCutterModeEnum
+from octoprint_mrbeam.enums.device_series import DeviceSeriesEnum
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -261,7 +262,13 @@ class MrBeamPlugin(
 
         self.analytics_handler = analyticsHandler(self)
         self._laser_cutter_mode_service = laser_cutter_mode_service(self)
+
+        # The laser cutter profile has already been initialized by OctoPrint at this point
+        # This is due to the Laser class hook implementation
+        # So at this point the laser cutter profile is already initialized with the default profile
         self.laser_cutter_profile_service = laser_cutter_profile_service(self)
+        # That's why we need to update the laser cutter profile with the profile for the current configuration
+        # and select it in the initialization of the plugin
         self.update_laser_cutter_profile(self.get_laser_cutter_profile_for_current_configuration())
         self.user_notification_system = user_notification_system(self)
         self.onebutton_handler = oneButtonHandler(self)
@@ -297,19 +304,36 @@ class MrBeamPlugin(
         self._printer.register_user_notification_system(self.user_notification_system)
 
     def update_laser_cutter_profile(self, profile):
+        """
+        Updates the laser cutter profile and selects it.
+
+        Args:
+            profile (dict): The profile to update.
+
+        Returns:
+            None
+        """
+        # We save the profile even if it already exists to make sure that it is up-to-date with the latest
+        # changes in the profiles' implementation
         self.laser_cutter_profile_service.save(profile, allow_overwrite=True, make_default=True)
         self.laser_cutter_profile_service.select(profile['id'])
 
     def get_laser_cutter_profile_for_current_configuration(self):
+        """
+        Returns the laser cutter profile for the current configuration.
+
+        Returns:
+            dict: The laser cutter profile for the current configuration.
+        """
         laser_cutter_mode = self.get_laser_cutter_mode()
         device_series = self._device_info.get_series()
         profile = laser_cutter_profiles.default_profile
         if laser_cutter_mode == LaserCutterModeEnum.DEFAULT.value:
-            if device_series == "2C":
+            if device_series == DeviceSeriesEnum.C.value:
                 profile = laser_cutter_profiles.series_2c
         elif laser_cutter_mode == LaserCutterModeEnum.ROTARY.value:
             profile = laser_cutter_profiles.rotary_profile
-            if device_series == "2C":
+            if device_series == DeviceSeriesEnum.C.value:
                 profile = laser_cutter_profiles.series_2c_rotary_profile
         return profile
 
@@ -318,42 +342,33 @@ class MrBeamPlugin(
         return self._settings
 
     def _on_iobeam_connect(self, *args, **kwargs):
-        """Called when the iobeam socket is connected.
-
-        Args:
-            *args:
-            **kwargs:
+        """
+        Called when the iobeam socket is connected.
 
         Returns:
-
+            None
         """
         self._logger.info("MrBeamPlugin on_iobeam_connected")
         self._iobeam_connected = True
         self._try_to_connect_laser()
 
     def _on_laserhead_ready(self, *args, **kwargs):
-        """Called when the laserhead is ready.
-
-        Args:
-            *args:
-            **kwargs:
+        """
+        Called when the laserhead is ready.
 
         Returns:
-
+            None
         """
         self._logger.info("MrBeamPlugin on_laserhead_ready")
         self._laserhead_ready = True
         self._try_to_connect_laser()
 
     def _on_laser_cutter_profile_initialized(self, *args, **kwargs):
-        """Called when the laser cutter profile is initialized is initialized.
-
-        Args:
-            *args:
-            **kwargs:
+        """
+        Called when the laser cutter profile is initialized.
 
         Returns:
-
+            None
         """
         self._logger.info("MrBeamPlugin on_laser_cutter_profile_initialized")
         self._laser_cutter_profile_initialized = True
@@ -887,9 +902,9 @@ class MrBeamPlugin(
                 enable_accesscontrol and self._user_manager.hasBeenCustomized()
         )
 
-        selectedProfile = self.laser_cutter_profile_service.get_current_or_default()
-        enable_focus = selectedProfile["focus"]
-        safety_glasses = selectedProfile["glasses"]
+        selected_profile = self.laser_cutter_profile_service.get_current_or_default()
+        enable_focus = selected_profile["focus"]
+        safety_glasses = selected_profile["glasses"]
         # render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
         wizard = render_kwargs["templates"] is not None and bool(
@@ -1726,7 +1741,7 @@ class MrBeamPlugin(
 
     # Laser cutter profiles
     @octoprint.plugin.BlueprintPlugin.route("/currentProfile", methods=["GET"])
-    def laserCutterProfilesList(self):
+    def get_current_laser_cutter_profile(self):
         return jsonify(self.laser_cutter_profile_service.get_current_or_default())
 
     # ~ Calibration
@@ -2127,7 +2142,7 @@ class MrBeamPlugin(
                         parse_csv(
                             device_model=self.get_model_id(),
                             laserhead_model=self.get_current_laser_head_model(),
-                            laser_cutter_mode = self.get_laser_cutter_mode() if self.get_laser_cutter_mode() is not None else LaserCutterModeEnum.DEFAULT.value,
+                            laser_cutter_mode = self.get_laser_cutter_mode() or LaserCutterModeEnum.DEFAULT.value,
                         )
                     ),
                     200,
