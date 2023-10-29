@@ -77,6 +77,7 @@ class Laser(Printer):
             self._comm.close()
 
         eventManager().fire(Events.CONNECTING, payload=dict(profile=self._printerProfileManager.get_current_or_default()['id']))
+        # TODO: SW-4080: Handle when switching the profiles in realtime
         # self._printerProfileManager.select(profile)
         self._comm = comm.MachineCom(
             port,

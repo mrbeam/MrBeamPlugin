@@ -1,4 +1,13 @@
 # coding=utf-8
+"""
+This file is a modified version of the original file from OctoPrint.
+The original file is profile.py located in the folder octoprint/printer/profile.py.
+The original class was designed to work only with printer profiles and with defined
+dictionary structures. This modified version is designed to work with any kind of
+profile and with any kind of dictionary structure. The only requirement is that the
+profile is a dictionary.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 import os

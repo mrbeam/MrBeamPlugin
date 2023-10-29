@@ -40,7 +40,7 @@ from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.service.profile.laser_cutter_profile import laser_cutter_profile_service
-
+from octoprint_mrbeam.constant.profile import laser_cutter as laser_cutter_profiles
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -144,7 +144,7 @@ class MachineCom(object):
     pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
     def __init__(
-        self, port=None, baudrate=None, callbackObject=None, printerProfileManager=laser_cutter_profile_service()
+        self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None
     ):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
 
@@ -160,11 +160,16 @@ class MachineCom(object):
                 baudrate = settingsBaudrate
         if callbackObject is None:
             callbackObject = MachineComPrintCallback()
+        if printerProfileManager:
+            laser_cutter_profile = printerProfileManager().get_current_or_default()
+        else:
+            laser_cutter_profile = laser_cutter_profiles.default_profile
 
         self._port = port
         self._baudrate = baudrate
         self._callback = callbackObject
-        self._laserCutterProfile = printerProfileManager.get_current_or_default()
+
+        self._laserCutterProfile = laser_cutter_profile
 
         self._state = self.STATE_NONE
         self._grbl_state = None
