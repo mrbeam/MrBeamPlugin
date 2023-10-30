@@ -158,8 +158,11 @@ class MigrationBaseClass:
         self._logger.warn("start rollback " + self.__class__.__name__)
 
         try:
-            self._rollback()
-            self._setState(MIGRATION_STATE.rollback_done)
+            if not self._rollback():
+                self._setState(MIGRATION_STATE.rollback_error)
+                self._logger.error("error during rollback")
+            else:
+                self._setState(MIGRATION_STATE.rollback_done)
             self._logger.info("end rollback " + self.__class__.__name__)
         except MigrationException as e:
             self._setState(MIGRATION_STATE.rollback_error)

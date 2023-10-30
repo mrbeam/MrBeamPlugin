@@ -20,8 +20,10 @@ class Mig006FixUsageData(MigrationBaseClass):
     BEAMOS_VERSION_LOW = "0.18.0"
     BEAMOS_VERSION_HIGH = "0.20.1"
     COMMAND_TO_GET_LOGS = 'grep -r "octoprint.plugins.mrbeam.analytics.usage - ERROR - No job time found in {}" /home/pi/.octoprint/logs/'
+    USAGE_DATA_FILE_PATH = "/home/pi/.octoprint/analytics/usage.yaml"
 
     def __init__(self, plugin):
+        self._backup_usage_data = None
         super(Mig006FixUsageData, self).__init__(
             plugin, restart=MIGRATION_RESTART.OCTOPRINT
         )
@@ -40,7 +42,7 @@ class Mig006FixUsageData(MigrationBaseClass):
             Mig006FixUsageData.COMMAND_TO_GET_LOGS, log=True, shell=True
         )
 
-        if code == 0 and command_output != "":  # TODO
+        if code == 0 and command_output != "":
             return True
         else:
             return False
@@ -48,9 +50,8 @@ class Mig006FixUsageData(MigrationBaseClass):
     def _run(self):
         self._logger.debug("fix usage data")
         found_lines = exec_cmd_output(self.COMMAND_TO_GET_LOGS, log=True, shell=True)
-        self._logger.debug("found_lines: {}".format(found_lines))
         found_lines = str(found_lines).replace("\\'", "'").replace("\\n", "\n")
-        self._logger.debug("found_lines fixed: {}".format(found_lines))
+
         regex = r"No job time found in {}, returning 0 - {.*'airfilter': {(\d*): {'prefilter': {'[^}]*'job_time': (\d+\.\d+)[^}]*}, 'carbon_filter': {'[^}]*'job_time': (\d+\.\d+)[^}]*}"
 
         match = re.search(regex, found_lines)
@@ -66,9 +67,9 @@ class Mig006FixUsageData(MigrationBaseClass):
             )
             self._logger.debug("Prefilter Job Time: {}".format(prefilter_job_time))
 
-            file_path = "/home/pi/.octoprint/analytics/usage.yaml"
-            with open(file_path, "r") as yaml_file:
+            with open(self.USAGE_DATA_FILE_PATH, "r") as yaml_file:
                 yaml_data = yaml.load(yaml_file)
+                self._backup_usage_data = yaml_data
 
             # Update the job_time in the airfilter prefilter
             if "airfilter" in yaml_data:
@@ -86,11 +87,16 @@ class Mig006FixUsageData(MigrationBaseClass):
                     ] = carbon_filter_job_time
 
             # Save the modified YAML back to the file
-            with open(file_path, "w") as yaml_file:
+            with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
                 yaml.safe_dump(yaml_data, yaml_file, default_flow_style=False)
 
         super(Mig006FixUsageData, self)._run()
 
     def _rollback(self):
-        # no rollback needed
+        if self._backup_usage_data:
+            with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
+                yaml.safe_dump(
+                    self._backup_usage_data, yaml_file, default_flow_style=False
+                )
+                return True
         super(Mig006FixUsageData, self)._rollback()
