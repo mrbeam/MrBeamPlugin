@@ -8,6 +8,8 @@ How to use:
     - iterate over the list items and run the shouldrun(<migrationclass>, <beamos_version>)
     - compare the result list with the already executed list and call the run() of the result list
 """
+from octoprint_mrbeam.migration import Mig006
+
 # these imports are for external use
 from octoprint_mrbeam.migration.migration_base import MIGRATION_STATE as MIGRATION_STATE
 from octoprint_mrbeam.migration.migration_base import (
@@ -34,4 +36,5 @@ list_of_migrations = [
     Mig003EnableLogrotateBuster,
     Mig004DisableDebugLogging,
     Mig005InstallNTP,
+    Mig006.Mig006FixUsageData,
 ]
