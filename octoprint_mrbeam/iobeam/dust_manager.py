@@ -45,7 +45,7 @@ class DustManager(object):
     DATA_TYPE_DYNAMIC = "dynamic"
     DATA_TYPE_CONENCTED = "connected"
 
-    FAN_TEST_RPM_PERCENTAGE = 80
+    FAN_TEST_RPM_PERCENTAGE = 60
     FAN_TEST_DURATION = 35  # seconds
     FAN_TEST_DURATION_EXTEND = 10  # seconds
     FAN_TEST_RPM_MIN_DIFF = 500  # rpm
