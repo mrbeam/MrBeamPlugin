@@ -20,6 +20,7 @@ class Mig006FixUsageData(MigrationBaseClass):
     BEAMOS_VERSION_LOW = "0.18.0"
     BEAMOS_VERSION_HIGH = "0.20.1"
     COMMAND_TO_GET_LOGS = 'grep -r "octoprint.plugins.mrbeam.analytics.usage - ERROR - No job time found in {}" /home/pi/.octoprint/logs/'
+    COMMAND_TO_CHECK_IF_VERSION_WAS_PRESENT = 'grep -a -e "Mr Beam Laser Cutter (0.15.0.post0) = /home/pi/oprint/local/lib/python2.7/site-packages/octoprint_mrbeam" -e "Mr Beam Laser Cutter (0.15.0) = /home/pi/oprint/local/lib/python2.7/site-packages/octoprint_mrbeam" /home/pi/.octoprint/logs/*'
     USAGE_DATA_FILE_PATH = "/home/pi/.octoprint/analytics/usage.yaml"
 
     def __init__(self, plugin):
@@ -39,7 +40,9 @@ class Mig006FixUsageData(MigrationBaseClass):
         overrides the current behaviour as this migration should run if the log file contains the "octoprint.plugins.mrbeam.analytics.usage - ERROR - No job time found in {}, returning 0" error
         """
         command_output, code = exec_cmd_output(
-            Mig006FixUsageData.COMMAND_TO_GET_LOGS, log=True, shell=True
+            Mig006FixUsageData.COMMAND_TO_CHECK_IF_VERSION_WAS_PRESENT,
+            log=True,
+            shell=True,
         )
 
         if code == 0 and command_output != "":
