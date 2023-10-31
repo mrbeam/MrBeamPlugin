@@ -17,8 +17,6 @@ class Mig006FixUsageData(MigrationBaseClass):
     This migration fix the usage data that was lost during v0.15.0 update
     """
 
-    BEAMOS_VERSION_LOW = "0.18.0"
-    BEAMOS_VERSION_HIGH = "0.20.1"
     COMMAND_TO_GET_LOGS = 'grep -r "octoprint.plugins.mrbeam.analytics.usage - ERROR - No job time found in {}" /home/pi/.octoprint/logs/'
     COMMAND_TO_CHECK_IF_VERSION_WAS_PRESENT = 'grep -a -e "Mr Beam Laser Cutter (0.15.0.post0) = /home/pi/oprint/local/lib/python2.7/site-packages/octoprint_mrbeam" -e "Mr Beam Laser Cutter (0.15.0) = /home/pi/oprint/local/lib/python2.7/site-packages/octoprint_mrbeam" /home/pi/.octoprint/logs/*'
     USAGE_DATA_FILE_PATH = "/home/pi/.octoprint/analytics/usage.yaml"
@@ -55,44 +53,59 @@ class Mig006FixUsageData(MigrationBaseClass):
         found_lines = exec_cmd_output(self.COMMAND_TO_GET_LOGS, log=True, shell=True)
         found_lines = str(found_lines).replace("\\'", "'").replace("\\n", "\n")
 
-        regex = r"No job time found in {}, returning 0 - {.*'airfilter': {(\d*): {'prefilter': {'[^}]*'job_time': (\d+\.\d+)[^}]*}, 'carbon_filter': {'[^}]*'job_time': (\d+\.\d+)[^}]*}"
+        regex = r"No job time found in {}, returning 0 - {.*'prefilter': {'[^}]*'job_time': (\d+\.\d+)[^}]*}*.+'total': {'[^}]*'job_time': (\d+\.\d+)[^}]*.*'carbon_filter': {'[^}]*'job_time': (\d+\.\d+)[^}]"
 
         match = re.search(regex, found_lines)
         self._logger.debug("match: {}".format(match))
 
         if match:
-            airfilter_serial = match.group(1)
-            carbon_filter_job_time = match.group(2)
-            prefilter_job_time = match.group(3)
-            self._logger.debug("Airfilter Serial: {}".format(airfilter_serial))
-            self._logger.debug(
+            prefilter_job_time = float(match.group(1))
+            total_time = float(match.group(2))
+            carbon_filter_job_time = float(match.group(3))
+            self._logger.info("total_time: {}".format(total_time))
+            self._logger.info(
                 "Carbon Filter Job Time: {}".format(carbon_filter_job_time)
             )
-            self._logger.debug("Prefilter Job Time: {}".format(prefilter_job_time))
+            self._logger.info("Prefilter Job Time: {}".format(prefilter_job_time))
 
             with open(self.USAGE_DATA_FILE_PATH, "r") as yaml_file:
                 yaml_data = yaml.load(yaml_file)
                 self._backup_usage_data = yaml_data
+            if (
+                float(yaml_data["total"]["job_time"]) - 180000 < total_time
+            ):  # only migrate if the working time difference is less than 50 hours
+                # Update the job_time in the airfilter prefilter
+                self._logger.info(
+                    "current usage file {} -{}".format(
+                        yaml_data, yaml_data.get("airfilter")
+                    )
+                )
+                if "airfilter" in yaml_data:
+                    for airfilter_serial, airfilter_data in yaml_data.get(
+                        "airfilter"
+                    ).items():
+                        if ("prefilter" or "carbon_filter") in airfilter_data:
+                            yaml_data["airfilter"][airfilter_serial]["prefilter"][
+                                "job_time"
+                            ] = prefilter_job_time
+                            yaml_data["airfilter"][airfilter_serial]["carbon_filter"][
+                                "job_time"
+                            ] = carbon_filter_job_time
+                self._logger.info(
+                    "Data was migrated successfully. {}".format(yaml_data)
+                )
 
-            # Update the job_time in the airfilter prefilter
-            if "airfilter" in yaml_data:
-                airfilter_data = yaml_data["airfilter"]
-                if (
-                    airfilter_serial in airfilter_data
-                    and ("prefilter" or "carbon_filter")
-                    in airfilter_data[airfilter_serial]
-                ):
-                    airfilter_data[airfilter_serial]["prefilter"][
-                        "job_time"
-                    ] = prefilter_job_time
-                    airfilter_data[airfilter_serial]["carbon_filter"][
-                        "job_time"
-                    ] = carbon_filter_job_time
-
-            # Save the modified YAML back to the file
-            with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
-                yaml.safe_dump(yaml_data, yaml_file, default_flow_style=False)
-
+                # Save the modified YAML back to the file
+                with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
+                    yaml.safe_dump(yaml_data, yaml_file, default_flow_style=False)
+            else:
+                self._logger.info(
+                    "Data will not be migrated as there was already to many working hours time in between."
+                )
+        else:
+            self._logger.warn(
+                "Could not find the usage data to recover to in the logs."
+            )
         super(Mig006FixUsageData, self)._run()
 
     def _rollback(self):
