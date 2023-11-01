@@ -78,7 +78,9 @@ plugin_ignored_packages = []
 additional_setup_parameters = {
     "package_data": {
         "octoprint_mrbeam": [
-            "profiles/*",
+            "profiles/*.yaml",
+            "profiles/laserhead/*.yaml",
+            "profiles/airfilter_system/*.yaml",
             "files/grbl/*.hex",
             "files/migrate/*",
             "files/Mig005/*",
