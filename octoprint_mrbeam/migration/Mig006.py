@@ -59,22 +59,25 @@ class Mig006FixUsageData(MigrationBaseClass):
         self._logger.debug("match: {}".format(match))
 
         if match:
-            prefilter_job_time = float(match.group(1))
-            total_time = float(match.group(2))
-            carbon_filter_job_time = float(match.group(3))
-            self._logger.info("total_time: {}".format(total_time))
+            bug_prefilter_job_time = float(match.group(1))
+            bug_total_time = float(match.group(2))
+            bug_carbon_filter_job_time = float(match.group(3))
+            self._logger.info("total_time: {}".format(bug_total_time))
             self._logger.info(
-                "Carbon Filter Job Time: {}".format(carbon_filter_job_time)
+                "Carbon Filter Job Time: {}".format(bug_carbon_filter_job_time)
             )
-            self._logger.info("Prefilter Job Time: {}".format(prefilter_job_time))
+            self._logger.info("Prefilter Job Time: {}".format(bug_prefilter_job_time))
 
             with open(self.USAGE_DATA_FILE_PATH, "r") as yaml_file:
                 yaml_data = yaml.load(yaml_file)
                 self._backup_usage_data = yaml_data
             if (
-                float(yaml_data["total"]["job_time"]) - 180000 < total_time
+                float(yaml_data["total"]["job_time"]) - 180000 < bug_total_time
             ):  # only migrate if the working time difference is less than 50 hours
                 # Update the job_time in the airfilter prefilter
+                time_since_error = (
+                    float(yaml_data["total"]["job_time"]) - bug_total_time
+                )
                 self._logger.info(
                     "current usage file {} -{}".format(
                         yaml_data, yaml_data.get("airfilter")
@@ -87,13 +90,16 @@ class Mig006FixUsageData(MigrationBaseClass):
                         if ("prefilter" or "carbon_filter") in airfilter_data:
                             yaml_data["airfilter"][airfilter_serial]["prefilter"][
                                 "job_time"
-                            ] = prefilter_job_time
+                            ] = (bug_prefilter_job_time + time_since_error)
                             yaml_data["airfilter"][airfilter_serial]["carbon_filter"][
                                 "job_time"
-                            ] = carbon_filter_job_time
+                            ] = (bug_carbon_filter_job_time + time_since_error)
                 self._logger.info(
                     "Data was migrated successfully. {}".format(yaml_data)
                 )
+                # pop elements of old airfilter structure
+                yaml_data.pop("prefilter")
+                yaml_data.pop("carbon_filter")
 
                 # Save the modified YAML back to the file
                 with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
