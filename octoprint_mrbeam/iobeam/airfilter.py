@@ -657,7 +657,7 @@ class AirFilter(object):
                             ]
                         )
                     except KeyError:
-                        self._logger.error(
+                        self._logger.warn(
                             "Shopify link not found for filter stage: {} stage id: {}".format(
                                 filter_stage, i
                             )
