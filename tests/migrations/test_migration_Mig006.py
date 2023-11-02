@@ -109,7 +109,6 @@ version: 0.15.0.post0
 """
 
 
-
 @pytest.fixture
 def migration006():
     return Mig006FixUsageData(None)
