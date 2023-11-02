@@ -83,10 +83,18 @@ class Mig006FixUsageData(MigrationBaseClass):
                         yaml_data, yaml_data.get("airfilter")
                     )
                 )
+                self._logger.info(
+                    "workingtime since error: {}".format(time_since_error)
+                )
                 if "airfilter" in yaml_data:
                     for airfilter_serial, airfilter_data in yaml_data.get(
                         "airfilter"
                     ).items():
+                        self._logger.info(
+                            "migrate airfilter {} - {}".format(
+                                airfilter_serial, airfilter_data
+                            )
+                        )
                         if ("prefilter" or "carbon_filter") in airfilter_data:
                             yaml_data["airfilter"][airfilter_serial]["prefilter"][
                                 "job_time"
@@ -97,9 +105,11 @@ class Mig006FixUsageData(MigrationBaseClass):
                 self._logger.info(
                     "Data was migrated successfully. {}".format(yaml_data)
                 )
-                # pop elements of old airfilter structure
-                yaml_data.pop("prefilter")
-                yaml_data.pop("carbon_filter")
+                # pop elements of old air filter structure
+                if "prefilter" in yaml_data:
+                    yaml_data.pop("prefilter")
+                if "carbon_filter" in yaml_data:
+                    yaml_data.pop("carbon_filter")
 
                 # Save the modified YAML back to the file
                 with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
