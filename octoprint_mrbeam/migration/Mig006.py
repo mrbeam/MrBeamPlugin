@@ -124,9 +124,6 @@ class Mig006FixUsageData(MigrationBaseClass):
                 # Save the modified YAML back to the file
                 with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
                     yaml.safe_dump(yaml_data, yaml_file, default_flow_style=False)
-
-                with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
-                    yaml.safe_dump(yaml_data, yaml_file, default_flow_style=False)
             else:
                 self._logger.info(
                     "Data will not be migrated as there was already to many working hours time in between."
