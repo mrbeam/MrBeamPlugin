@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from mock.mock import patch, mock_open, call, MagicMock
 
@@ -141,7 +143,8 @@ def mock_yaml_safe_dump():
         yield mock_dump
 
 
-def test_migration_did_run(migration006, mock_yaml_safe_dump):
+def test_migration_did_run(migration006, mock_yaml_safe_dump, mocker):
+    mocker.patch.object(migration006, "exec_cmd", autospec=True)
     with patch(
         "octoprint_mrbeam.migration.Mig006.exec_cmd_output",
         return_value=(OUTPUT_OF_EXEC_CMD, 0),
@@ -153,6 +156,11 @@ def test_migration_did_run(migration006, mock_yaml_safe_dump):
         migration006.run()
 
         # Assert
+        migration006.exec_cmd.assert_any_call(
+            "sudo mv /home/pi/.octoprint/analytics/usage_bak.yaml /home/pi/.octoprint/analytics/usage_bak.yaml_{}".format(
+                date.today().strftime("%Y_%m_%d")
+            )
+        )
         assert mock_yaml_safe_dump.call_args.args[0] == {
             "airfilter": {
                 60745: {

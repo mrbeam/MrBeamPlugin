@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import date
 
 import yaml
 
@@ -20,6 +21,7 @@ class Mig006FixUsageData(MigrationBaseClass):
     COMMAND_TO_GET_LOGS = 'grep -r "octoprint.plugins.mrbeam.analytics.usage - ERROR - No job time found in {}" /home/pi/.octoprint/logs/'
     COMMAND_TO_CHECK_IF_VERSION_WAS_PRESENT = 'grep -a -e "Mr Beam Laser Cutter (0.15.0.post0) = /home/pi/oprint/local/lib/python2.7/site-packages/octoprint_mrbeam" -e "Mr Beam Laser Cutter (0.15.0) = /home/pi/oprint/local/lib/python2.7/site-packages/octoprint_mrbeam" /home/pi/.octoprint/logs/*'
     USAGE_DATA_FILE_PATH = "/home/pi/.octoprint/analytics/usage.yaml"
+    USAGE_DATA_FILE_PATH_BACKUP = "/home/pi/.octoprint/analytics/usage_bak.yaml"
 
     def __init__(self, plugin):
         self._backup_usage_data = None
@@ -74,6 +76,14 @@ class Mig006FixUsageData(MigrationBaseClass):
             if (
                 float(yaml_data["total"]["job_time"]) - 180000 < bug_total_time
             ):  # only migrate if the working time difference is less than 50 hours
+                self.exec_cmd(
+                    "sudo mv {file} {file_new}".format(
+                        file=self.USAGE_DATA_FILE_PATH_BACKUP,
+                        file_new=self.USAGE_DATA_FILE_PATH_BACKUP
+                        + "_"
+                        + date.today().strftime("%Y_%m_%d"),
+                    )
+                )
                 # Update the job_time in the airfilter prefilter
                 time_since_error = (
                     float(yaml_data["total"]["job_time"]) - bug_total_time
@@ -112,6 +122,9 @@ class Mig006FixUsageData(MigrationBaseClass):
                     yaml_data.pop("carbon_filter")
 
                 # Save the modified YAML back to the file
+                with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
+                    yaml.safe_dump(yaml_data, yaml_file, default_flow_style=False)
+
                 with open(self.USAGE_DATA_FILE_PATH, "w") as yaml_file:
                     yaml.safe_dump(yaml_data, yaml_file, default_flow_style=False)
             else:
