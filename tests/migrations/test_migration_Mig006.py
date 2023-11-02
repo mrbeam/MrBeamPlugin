@@ -207,7 +207,7 @@ def test_migration_did_run(migration006, mock_yaml_safe_dump):
         }
 
 
-def test_migration_to_old(migration006, mock_yaml_safe_dump):
+def test_migration_too_old(migration006, mock_yaml_safe_dump):
     with patch(
         "octoprint_mrbeam.migration.Mig006.exec_cmd_output",
         return_value=(OUTPUT_OF_EXEC_CMD, 0),
