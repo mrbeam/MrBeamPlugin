@@ -80,6 +80,7 @@ additional_setup_parameters = {
         "octoprint_mrbeam": [
             "profiles/*.yaml",
             "profiles/laserhead/*.yaml",
+            "profiles/airfilter_system/*.yaml",
             "files/grbl/*.hex",
             "files/migrate/*",
             "files/Mig005/*",

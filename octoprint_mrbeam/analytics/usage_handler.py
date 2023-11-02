@@ -317,7 +317,12 @@ class UsageHandler(object):
         Returns:
             (dict): Usage data for the prefilter of the airfilter with the given serial
         """
-        return self._get_airfilter_usage_data(serial).get(self.PREFILTER_KEY, {})
+        if self.PREFILTER_KEY not in self._get_airfilter_usage_data(serial):
+            self._logger.warn("Prefilter key not found in usage data, init with 0")
+        return self._get_airfilter_usage_data(serial).get(
+            self.PREFILTER_KEY,
+            {self.JOB_TIME_KEY: 0.0, self.COMPLETE_KEY: self._plugin.isFirstRun()},
+        )
 
     def _get_airfilter_carbon_filter_usage_data(self, serial=None):
         """
@@ -329,7 +334,12 @@ class UsageHandler(object):
         Returns:
             (dict): Usage data for the carbon filter of the airfilter with the given serial
         """
-        return self._get_airfilter_usage_data(serial).get(self.CARBON_FILTER_KEY, {})
+        if self.CARBON_FILTER_KEY not in self._get_airfilter_usage_data(serial):
+            self._logger.warn("Carbon filter key not found in usage data, init with 0")
+        return self._get_airfilter_usage_data(serial).get(
+            self.CARBON_FILTER_KEY,
+            {self.JOB_TIME_KEY: 0.0, self.COMPLETE_KEY: self._plugin.isFirstRun()},
+        )
 
     def _set_job_time(self, component, job_time):
         """
@@ -632,36 +642,6 @@ class UsageHandler(object):
             self._event_bus.fire(MrBeamEvents.USAGE_DATA_CHANGED)
 
     def _init_missing_usage_data(self):
-        # Initialize prefilter in case it wasn't stored already --> From the total usage
-        if self.PREFILTER_KEY not in self._usage_data:
-            self._usage_data[self.PREFILTER_KEY] = {}
-            self._usage_data[self.PREFILTER_KEY][self.COMPLETE_KEY] = self._usage_data[
-                self.TOTAL_KEY
-            ][self.COMPLETE_KEY]
-            self._usage_data[self.PREFILTER_KEY][self.JOB_TIME_KEY] = self._usage_data[
-                self.TOTAL_KEY
-            ][self.JOB_TIME_KEY]
-            self._logger.info(
-                "Initializing prefilter usage time: {usage}".format(
-                    usage=self._get_prefilter_usage_time()
-                )
-            )
-
-        # Initialize carbon_filter in case it wasn't stored already --> From the total usage
-        if self.CARBON_FILTER_KEY not in self._usage_data:
-            self._usage_data[self.CARBON_FILTER_KEY] = {}
-            self._usage_data[self.CARBON_FILTER_KEY][
-                self.COMPLETE_KEY
-            ] = self._usage_data[self.TOTAL_KEY][self.COMPLETE_KEY]
-            self._usage_data[self.CARBON_FILTER_KEY][
-                self.JOB_TIME_KEY
-            ] = self._usage_data[self.TOTAL_KEY][self.JOB_TIME_KEY]
-            self._logger.info(
-                "Initializing carbon filter usage time: {usage}".format(
-                    usage=self._usage_data[self.CARBON_FILTER_KEY][self.JOB_TIME_KEY]
-                )
-            )
-
         # Initialize laser_head in case it wasn't stored already (+ first laser head) --> From the total usage
         if self.LASER_HEAD_KEY not in self._usage_data:
             self._usage_data[self.LASER_HEAD_KEY] = {}

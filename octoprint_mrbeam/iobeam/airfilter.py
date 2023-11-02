@@ -309,7 +309,8 @@ class AirFilter(object):
             self._iobeam.reset_exhaust()
             return None
         else:
-            self._external_power = device.ext_power
+            if device.ext_power is not None:
+                self._external_power = device.ext_power
 
     def _get_avg_pressure_differences(self):
         """Returns the average pressure differences of the last pressure readings.
@@ -657,7 +658,7 @@ class AirFilter(object):
                             ]
                         )
                     except KeyError:
-                        self._logger.error(
+                        self._logger.warn(
                             "Shopify link not found for filter stage: {} stage id: {}".format(
                                 filter_stage, i
                             )
