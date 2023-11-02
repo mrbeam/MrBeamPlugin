@@ -108,36 +108,6 @@ ts: 1698678400.341805
 version: 0.15.0.post0
 """
 
-CORRECT_YAML_FILE = """airfilter:
-  60745:
-    carbon_filter:
-      complete: false
-      job_time: 889373.3413743973
-    prefilter:
-      complete: false
-      job_time: 889373.3413743973
-compressor:
-  complete: false
-  job_time: 889373.3413743973
-first_write: 1649453028.697643
-gantry:
-  complete: false
-  job_time: 889373.3413743973
-laser_head:
-  no_serial:
-    complete: false
-    job_time: 0.0
-restored: 2
-serial: 00000000XXXXXX-2Q
-succ_jobs:
-  complete: false
-  count: 620
-total:
-  complete: false
-  job_time: 889373.3413743973
-ts: 1698678400.341805
-version: 0.15.0.post0
-"""
 
 
 @pytest.fixture
@@ -207,7 +177,7 @@ def test_migration_did_run(migration006, mock_yaml_safe_dump):
         }
 
 
-def test_migration_to_old(migration006, mock_yaml_safe_dump):
+def test_migration_too_old(migration006, mock_yaml_safe_dump):
     with patch(
         "octoprint_mrbeam.migration.Mig006.exec_cmd_output",
         return_value=(OUTPUT_OF_EXEC_CMD, 0),
