@@ -14,7 +14,7 @@ from octoprint_mrbeam.migration.migration_base import (
 
 class Mig006FixUsageData(MigrationBaseClass):
     """
-    This migration fix the usage data that was lost during v0.15.0 update
+    This migration fix the usage data that was lost during v0.15.0 and 0.15.0post0 updates
     """
 
     COMMAND_TO_GET_LOGS = 'grep -r "octoprint.plugins.mrbeam.analytics.usage - ERROR - No job time found in {}" /home/pi/.octoprint/logs/'
