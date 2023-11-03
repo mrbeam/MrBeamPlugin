@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 from mock.mock import patch, mock_open
 
-from octoprint_mrbeam.migration.Mig006 import Mig006FixUsageData
+from octoprint_mrbeam.migration.Mig006 import Mig006BackupUsageDataBeforeMigration
 
 YAML_FILE = """airfilter:
   60745:
@@ -76,7 +76,7 @@ version: 0.15.0.post0
 
 @pytest.fixture
 def migration006():
-    return Mig006FixUsageData(None)
+    return Mig006BackupUsageDataBeforeMigration(None)
 
 
 @pytest.mark.parametrize(
@@ -89,7 +89,10 @@ def migration006():
 )
 def test_migration_should_run(yaml_file, should_run, migration006):
     with patch("__builtin__.open", mock_open(read_data=yaml_file)) as mock_open_func:
-        assert migration006.shouldrun(Mig006FixUsageData, "0.14.0") == should_run
+        assert (
+            migration006.shouldrun(Mig006BackupUsageDataBeforeMigration, "0.14.0")
+            == should_run
+        )
 
 
 def test_migration_id(migration006):
