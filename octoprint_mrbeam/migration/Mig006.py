@@ -1,10 +1,9 @@
-from datetime import date
+import datetime
 
 import yaml
 
 from octoprint_mrbeam.migration.migration_base import (
     MigrationBaseClass,
-    MIGRATION_RESTART,
 )
 
 
@@ -17,9 +16,7 @@ class Mig006BackupUsageDataBeforeMigration(MigrationBaseClass):
 
     def __init__(self, plugin):
         self._backup_usage_data = None
-        super(Mig006BackupUsageDataBeforeMigration, self).__init__(
-            plugin, restart=MIGRATION_RESTART.OCTOPRINT
-        )
+        super(Mig006BackupUsageDataBeforeMigration, self).__init__(plugin)
 
     @property
     def id(self):
@@ -45,7 +42,7 @@ class Mig006BackupUsageDataBeforeMigration(MigrationBaseClass):
                 file=self.USAGE_DATA_FILE_PATH,
                 file_new=self.USAGE_DATA_FILE_PATH
                 + "_"
-                + date.today().strftime("%Y_%m_%d_%H_%M_%S"),
+                + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"),
             )
         )
         super(Mig006BackupUsageDataBeforeMigration, self)._run()
