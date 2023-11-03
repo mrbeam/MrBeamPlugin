@@ -1,4 +1,4 @@
-from datetime import date
+import datetime
 
 import pytest
 from mock.mock import patch, mock_open
@@ -114,6 +114,6 @@ def test_migration_did_run(migration006, mock_yaml_safe_dump, mocker):
     # Assert
     migration006.exec_cmd.assert_any_call(
         "sudo cp /home/pi/.octoprint/analytics/usage.yaml /home/pi/.octoprint/analytics/usage.yaml_{}".format(
-            date.today().strftime("%Y_%m_%d_%H_%M_%S")
+            datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         )
     )
