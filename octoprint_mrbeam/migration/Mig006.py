@@ -36,7 +36,7 @@ class Mig006BackupUsageDataBeforeMigration(MigrationBaseClass):
         return False
 
     def _run(self):
-        self._logger.debug("save usage data")
+        self._logger.info("save usage data")
         self.exec_cmd(
             "sudo cp {file} {file_new}".format(
                 file=self.USAGE_DATA_FILE_PATH,
