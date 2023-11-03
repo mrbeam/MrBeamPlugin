@@ -42,7 +42,7 @@ $(function () {
          * Add notification tempaltes here
          */
         self._notification_templates = {
-            leaserheadunit_missing: {
+            laserheadunit_missing: {
                 title: gettext("Laserhead unit missing"),
                 text: _.sprintf(
                     gettext(
