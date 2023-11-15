@@ -313,6 +313,12 @@ class MrBeamPlugin(
         Returns:
             None
         """
+        if not isinstance(profile, dict):
+            raise TypeError("The 'profile' parameter must be a dictionary.")
+
+        if 'id' not in profile or not isinstance(profile['id'], str):
+            raise ValueError("Invalid or missing 'id' in the provided profile.")
+
         # We save the profile even if it already exists to make sure that it is up-to-date with the latest
         # changes in the profiles' implementation
         self.laser_cutter_profile_service.save(profile, allow_overwrite=True, make_default=True)
@@ -330,7 +336,7 @@ class MrBeamPlugin(
         profile = laser_cutter_profiles.default_profile
         if laser_cutter_mode == LaserCutterModeEnum.DEFAULT.value:
             if device_series == DeviceSeriesEnum.C.value:
-                profile = laser_cutter_profiles.series_2c
+                profile = laser_cutter_profiles.series_2c_profile
         elif laser_cutter_mode == LaserCutterModeEnum.ROTARY.value:
             profile = laser_cutter_profiles.rotary_profile
             if device_series == DeviceSeriesEnum.C.value:

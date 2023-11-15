@@ -9,6 +9,7 @@ from octoprint.plugin import PluginManager
 
 from octoprint.settings import settings
 from octoprint_mrbeam import MrBeamPlugin
+from octoprint_mrbeam import deviceInfo, IS_X86
 
 sett = settings(init=True)  # Initialize octoprint settings, necessary for MrBeamPlugin
 
@@ -48,7 +49,9 @@ def mrbeam_plugin():
     )
     mrbeam_plugin._settings.get_boolean = MagicMock()
     mrbeam_plugin._settings.global_get = MagicMock()
+    mrbeam_plugin._device_info = deviceInfo(use_dummy_values=IS_X86)
     mrbeam_plugin._event_bus = event_manager
+    mrbeam_plugin.laser_cutter_profile_service = MagicMock()
     mrbeam_plugin.dust_manager = MagicMock()
     mrbeam_plugin.temperature_manager = MagicMock()
     mrbeam_plugin.compressor_handler = MagicMock()
