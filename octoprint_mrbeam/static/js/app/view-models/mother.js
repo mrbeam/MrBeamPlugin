@@ -813,13 +813,7 @@ $(function () {
         // starts a single GCode file.
         self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
             self.gcodefiles.loadFile(gcodeFile, false);
-            if (self.readyToLaser.oneButton) {
-                self.readyToLaser.setGcodeFile(gcodeFile.path);
-            } else {
-                self.show_safety_glasses_warning(function () {
-                    var do_print = self.gcodefiles.loadFile(gcodeFile, true);
-                });
-            }
+            self.readyToLaser.setGcodeFile(gcodeFile.path);
         };
 
         self.gcodefiles.takePhoto = function () {
@@ -850,15 +844,7 @@ $(function () {
                 path: payload.gcode,
             };
             self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
-            if (self.readyToLaser.oneButton) {
-                self.readyToLaser.setGcodeFile(payload.gcode);
-            } else {
-                var callback = function (e) {
-                    e.preventDefault();
-                    self.gcodefiles.loadFile(data, true); // starts print
-                };
-                self.show_safety_glasses_warning(callback);
-            }
+            self.readyToLaser.setGcodeFile(payload.gcode);
             self.gcodefiles.uploadProgress
                 .removeClass("progress-striped")
                 .removeClass("active");
@@ -961,36 +947,6 @@ $(function () {
                     self.terminal.activeFilters.push(filters[i].regex);
                 }
             }
-        };
-
-        self.show_safety_glasses_warning = function (callback) {
-            var options = {};
-            options.title = gettext("Ready to laser?");
-
-            if (self.workingArea.profile.currentProfileData().glasses()) {
-                options.cancel = gettext("Cancel");
-                options.proceed = gettext("Proceed");
-                options.message = gettext(
-                    "The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!"
-                );
-                options.question = gettext("Are you sure you want to proceed?");
-                options.proceedClass = "danger";
-                options.dialogClass = "safety_glasses_heads_up";
-            } else {
-                options.message = gettext(
-                    "The laser will now start. Please make sure the lid is closed."
-                );
-                options.question = gettext("Please confirm to proceed.");
-            }
-
-            options.onproceed = function (e) {
-                if (typeof callback === "function") {
-                    //                    self.state.numberOfPasses(parseInt(self.conversion.set_passes()));
-                    //                    self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
-                    callback(e);
-                }
-            };
-            showConfirmationDialog(options);
         };
     }
 
