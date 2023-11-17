@@ -88,8 +88,7 @@ $(function () {
                 window.mrbeam.mrb_state = mrb_state;
                 window.STATUS = mrb_state;
                 if ("cooling_mode" in mrb_state) {
-                    self.isCooling(true);
-                    // mrb_state["cooling_mode"]);
+                    self.isCooling(mrb_state["cooling_mode"]);
                 }
                 if ("airfilter_model" in mrb_state) {
                     self.airfilter_model(mrb_state["airfilter_model"]);
