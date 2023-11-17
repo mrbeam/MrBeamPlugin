@@ -24,7 +24,7 @@ $(function () {
         );
         self.jobTimeEstimationCalculated = ko.observable(false);
 
-        self.DEBUG = true;
+        self.DEBUG = false;
 
         const Status = {
             READY_TO_LASER: "READY_TO_LASER",
@@ -283,24 +283,13 @@ $(function () {
             }
             let mrb_state = payload[MRBEAM.STATE_KEY];
             if (mrb_state) {
-                // TODO: All the handling of mrb_state data should be moved into a dedicated view model
-                // window.mrbeam.mrb_state = mrb_state;
-                // window.STATUS = mrb_state;
                 self.updateSettingsAbout();
 
                 self.setDialog();
             }
-            //            console.log("_fromData() ["+event+"] pause_mode: "+self.is_pause_mode()+", interlocks_closed: "+self.interlocks_closed()+", is_cooling_mode: "+self.is_cooling_mode()+", is_fan_connected: "+self.is_fan_connected() +", is_rtl_mode: "+self.is_rtl_mode());
         };
 
         self.is_dialog_open = function () {
-            // return self._is_pause_mode() || self._is_rtl_mode();
-            console.log(
-                "is dialog open - ready_to_laser_state() " +
-                    self.ready_to_laser_state() +
-                    " " +
-                    self.show_dialog()
-            );
             return self.show_dialog();
         };
 
