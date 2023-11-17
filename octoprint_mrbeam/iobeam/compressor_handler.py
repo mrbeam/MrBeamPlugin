@@ -190,6 +190,8 @@ class CompressorHandler(object):
                         )
                 else:
                     self._num_rpm_0 = 0
+            elif "rpm_actual" in dataset and not self._printer.is_printing():
+                self._num_rpm_0 = 0
         else:
             self._logger.warn(
                 "Received empty compressor_dynamic_data dataset. compressor_dynamic_data: %s",

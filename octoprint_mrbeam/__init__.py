@@ -2940,6 +2940,7 @@ class MrBeamPlugin(
                     fan_state=self.dust_manager.get_fan_state(),
                     fan_rpm=self.dust_manager.get_fan_rpm(),
                     fan_dust=self.dust_manager.get_dust(),
+                    fan_external_power=self.airfilter.external_power,
                     compressor_state=self.compressor_handler.get_current_state(),
                     lid_fully_open=self.lid_handler.is_lid_open(),
                     interlocks_closed=self.iobeam.is_interlock_closed(),

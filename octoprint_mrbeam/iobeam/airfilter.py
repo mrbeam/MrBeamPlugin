@@ -228,6 +228,13 @@ class AirFilter(object):
             }
         return None
 
+    @property
+    def external_power(self):
+        if self.is_airfilter3():
+            return self._external_power
+        else:
+            return None
+
     def set_airfilter(self, model_id, serial):
         """Sets the air filter.
 
@@ -391,8 +398,6 @@ class AirFilter(object):
 
     @property
     def connected(self):
-        if self.is_airfilter3() and not self._external_power:
-            return False
         return self._connected
 
     @connected.setter
