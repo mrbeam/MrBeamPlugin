@@ -11,8 +11,7 @@ $(function () {
         self.loginState = params[0];
         self.state = params[1];
         self.laserCutterProfiles = params[2];
-
-        self.oneButton = true;
+        self.mrb_state = params[3];
 
         self.dialogElement = $(); // initialize not to undefined
         self.dialogShouldBeOpen = false;
@@ -20,37 +19,123 @@ $(function () {
         self.dialogTimeoutId = -1;
         self.gcodeFile = undefined;
 
-        self.state.interlocksClosed = ko.observable(false);
-        self.is_cooling_mode = ko.observable(false);
-        self.is_fan_connected = ko.observable(true);
-        self.is_rtl_mode = ko.observable(false);
-        self.lid_fully_open = ko.observable(false);
-
-        self.is_pause_mode = ko.observable(false);
-
         self.jobTimeEstimationString = ko.observable(
             self.ESTIMATED_DURATION_PLACEHOLDER
         );
         self.jobTimeEstimationCalculated = ko.observable(false);
 
-        self.DEBUG = false;
+        self.DEBUG = true;
+
+        const Status = {
+            READY_TO_LASER: "READY_TO_LASER",
+            FAN_NOT_CONNECTED: "FAN_NOT_CONNECTED",
+            FAN_NOT_ON_EXTERNAL_POWER: "FAN_NOT_ON_EXTERNAL_POWER",
+            LID_OPEN: "LID_OPEN",
+            COOLING: "COOLING",
+            PAUSED: "PAUSED",
+            UNKNOWN: "UNKNOWN",
+            OK: "OK",
+        };
+
+        self.ready_to_laser_state = ko.computed(function () {
+            if (
+                self.mrb_state.isRTLMode() !== undefined &&
+                self.mrb_state.isPaused() !== undefined &&
+                (self.mrb_state.isRTLMode() || self.mrb_state.isPaused())
+            ) {
+                if (
+                    self.mrb_state.isAirfilterConnected() !== undefined &&
+                    !self.mrb_state.isAirfilterConnected()
+                ) {
+                    return Status.FAN_NOT_CONNECTED;
+                } else if (
+                    self.mrb_state.isAirfilterExternalPowered() !== undefined &&
+                    !self.mrb_state.isAirfilterExternalPowered()
+                ) {
+                    return Status.FAN_NOT_ON_EXTERNAL_POWER;
+                } else if (
+                    self.mrb_state.isInterlocksClosed() !== undefined &&
+                    !self.mrb_state.isInterlocksClosed()
+                ) {
+                    return Status.LID_OPEN;
+                } else if (
+                    self.mrb_state.isCooling() !== undefined &&
+                    self.mrb_state.isCooling()
+                ) {
+                    return Status.COOLING;
+                } else if (
+                    self.mrb_state.isRTLMode() !== undefined &&
+                    self.mrb_state.isRTLMode()
+                ) {
+                    return Status.READY_TO_LASER;
+                } else if (
+                    self.mrb_state.isPaused() !== undefined &&
+                    self.mrb_state.isPaused()
+                ) {
+                    return Status.PAUSED;
+                } else {
+                    return Status.UNKNOWN;
+                }
+            } else {
+                return Status.OK;
+            }
+        });
+        self.is_pause_mode = ko.computed(function () {
+            return (
+                self.ready_to_laser_state() === Status.PAUSED ||
+                self.ready_to_laser_state() === Status.COOLING
+            );
+        });
+        self.show_dialog = ko.computed(function () {
+            console.log(
+                "show_dialog() " +
+                    self.ready_to_laser_state() +
+                    " " +
+                    Status.OK +
+                    " " +
+                    (self.ready_to_laser_state() === Status.OK) +
+                    (self.ready_to_laser_state() !== Status.OK)
+            );
+            return self.ready_to_laser_state() !== Status.OK;
+        });
+
+        self.lid_open = ko.computed(function () {
+            return self.ready_to_laser_state() === Status.LID_OPEN;
+        });
+        self.fan_not_connected = ko.computed(function () {
+            return self.ready_to_laser_state() === Status.FAN_NOT_CONNECTED;
+        });
+        self.fan_not_on_external_power = ko.computed(function () {
+            return (
+                self.ready_to_laser_state() === Status.FAN_NOT_ON_EXTERNAL_POWER
+            );
+        });
+        self.cooling = ko.computed(function () {
+            return self.ready_to_laser_state() === Status.COOLING;
+        });
+        self.ready_to_laser = ko.computed(function () {
+            return self.ready_to_laser_state() === Status.READY_TO_LASER;
+        });
+        self.paused = ko.computed(function () {
+            return self.ready_to_laser_state() === Status.PAUSED;
+        });
 
         self.debug = function (triggerEvent) {
             console.log(
                 "ReadyToLaserViewModel.debug: (" +
                     triggerEvent +
                     ") is_rtl_mode: " +
-                    self.is_rtl_mode() +
+                    self.ready_to_laser() +
                     ", is_pause_mode: " +
-                    self.is_pause_mode() +
-                    ", interlocksClosed: " +
-                    self.state.interlocksClosed() +
+                    self.paused() +
+                    ", lid_open: " +
+                    self.lid_open() +
                     ", self.lid_fully_open" +
-                    self.lid_fully_open() +
+                    self.mrb_state.isLidFullyOpen() +
                     ", is_cooling_mode: " +
-                    self.is_cooling_mode() +
+                    self.cooling() +
                     ", is_fan_connected" +
-                    self.is_fan_connected() +
+                    self.fan_not_connected() +
                     ", $('#ready_to_laser_dialog').is(':visible'): " +
                     $("#ready_to_laser_dialog").is(":visible") +
                     ", $('#laser_job_done_dialog').is(':visible'): " +
@@ -69,143 +154,49 @@ $(function () {
                 self.resetJobTimeEstimation();
             });
 
-            // /**
-            //  * OneButton
-            //  * The proper way to do this would be to have a callback that gets called by laserCutterProfiles once data are loaded.
-            //  * However, at some point we must register these. And it's safer to assume there is a OneButton...
-            //  */
-            // self.oneButton =
-            //     self.laserCutterProfiles.currentProfileData().start_method !=
-            //         undefined &&
-            //     self.laserCutterProfiles.currentProfileData().start_method() ==
-            //         "onebutton";
-            // if (!self.laserCutterProfiles.hasDataLoaded) {
-            //     self.oneButton = true;
-            //     console.warn(
-            //         "OneButton setting not loaded. Assuming OneButton=true for safety reasons. Try reloading the page if you don't have a OneButton."
-            //     );
-            // }
-            // yeah, we just set it to true! nothing else!
-            self.oneButton = true;
-
-            if (self.oneButton) {
-                console.log("OneButton activated.");
-
-                /**
-                 * Use 'show', 'shown'.. etx instead of 'show.bs.modal' in BS2!!! Otherwise these callbacks are unreliable!
-                 * This code has been written with the assumption of these callbacks being unreliable...
-                 * https://github.com/jschr/bootstrap-modal/issues/228
-                 * Now that I found how to use em correctly, this code seems a bit overly complicated...
-                 */
-                self.dialogElement.on("show", function (e) {
-                    if (self.dialogShouldBeOpen != true) {
-                        if (typeof e !== "undefined") {
-                            self._debugDaShit("on(show.bs.modal) skip");
-                            e.preventDefault();
-                        } else {
-                            self._debugDaShit(
-                                "on(show) cant prevent default event"
-                            );
-                        }
-                    } else {
-                        self._debugDaShit(
-                            "on(show) dialogIsInTransition <= true"
-                        );
-                        self.dialogIsInTransition = true;
-                    }
+            if (MRBEAM_ENV_LOCAL === "DEV") {
+                $(".dev_start_button").on("click", function () {
+                    console.log("dev_start_button pressed...");
+                    self._sendReadyToLaserRequest(true, true);
                 });
+            }
+            self.onEventReadyToLaserStart = function (payload) {
+                self._fromData(payload, "onEventReadyToLaserStart");
+            };
 
-                self.dialogElement.on("hide", function () {
-                    self._setReadyToLaserCancel(true);
-                    if (self.dialogShouldBeOpen != false) {
-                        if (typeof e !== "undefined") {
-                            self._debugDaShit("on(hide) skip");
-                            e.preventDefault();
-                        } else {
-                            self._debugDaShit(
-                                "on(hide) cant prevent default event"
-                            );
-                        }
-                    } else {
-                        self._debugDaShit(
-                            "on(hide) dialogIsInTransition <= true"
-                        );
-                        self.dialogIsInTransition = true;
-                    }
-                });
+            self.onEventReadyToLaserCanceled = function (payload) {
+                self._fromData(payload, "onEventReadyToLaserCanceled");
+            };
 
-                self.dialogElement.on("shown", function () {
-                    if (self.dialogShouldBeOpen == true) {
-                        self._debugDaShit(
-                            "on(shown) dialogIsInTransition <= false"
-                        );
-                        self.dialogIsInTransition = false;
-                    } else {
-                        self._debugDaShit(
-                            "on(shown) set timeout (dialogShouldBeOpen not true)"
-                        );
-                        self._setTimeoutForDialog();
-                    }
-                });
+            self.onEventPrintStarted = function (payload) {
+                self._fromData(payload, "onEventPrintStarted");
+            };
 
-                self.dialogElement.on("hidden", function () {
-                    if (self.dialogShouldBeOpen == false) {
-                        self._debugDaShit(
-                            "on(hidden) dialogIsInTransition <= false"
-                        );
-                        self.dialogIsInTransition = false;
-                    } else {
-                        self._debugDaShit(
-                            "on(hidden) set timeout (dialogShouldBeOpen not false)"
-                        );
-                        self._setTimeoutForDialog();
-                    }
-                });
+            self.onEventPrintPaused = function (payload) {
+                self._fromData(payload, "onEventPrintPaused");
+            };
 
-                if (MRBEAM_ENV_LOCAL == "DEV") {
-                    $(".dev_start_button").on("click", function () {
-                        console.log("dev_start_button pressed...");
-                        self._sendReadyToLaserRequest(true, true);
-                    });
+            self.onEventPrintResumed = function (payload) {
+                self._fromData(payload, "onEventPrintResumed");
+            };
+
+            self.onEventPrintCancelled = function (payload) {
+                self._setReadyToLaserCancel(false);
+                self._fromData(payload, "onEventPrintCancelled");
+            };
+
+            self.fromCurrentData = function (data) {
+                self._fromData(data);
+            };
+
+            self.onDataUpdaterPluginMessage = function (plugin, data) {
+                if (plugin !== MRBEAM.PLUGIN_IDENTIFIER) {
+                    return;
                 }
-                self.onEventReadyToLaserStart = function (payload) {
-                    self._fromData(payload, "onEventReadyToLaserStart");
-                };
-
-                self.onEventReadyToLaserCanceled = function (payload) {
-                    self._fromData(payload, "onEventReadyToLaserCanceled");
-                };
-
-                self.onEventPrintStarted = function (payload) {
-                    self._fromData(payload, "onEventPrintStarted");
-                };
-
-                self.onEventPrintPaused = function (payload) {
-                    self._fromData(payload, "onEventPrintPaused");
-                };
-
-                self.onEventPrintResumed = function (payload) {
-                    self._fromData(payload, "onEventPrintResumed");
-                };
-
-                self.onEventPrintCancelled = function (payload) {
-                    self._setReadyToLaserCancel(false);
-                    self._fromData(payload, "onEventPrintCancelled");
-                };
-
-                self.fromCurrentData = function (data) {
-                    self._fromData(data);
-                };
-
-                self.onDataUpdaterPluginMessage = function (plugin, data) {
-                    if (plugin !== MRBEAM.PLUGIN_IDENTIFIER) {
-                        return;
-                    }
-                    if (MRBEAM.STATE_KEY in data) {
-                        self._fromData(data, "onDataUpdaterPluginMessage");
-                    }
-                };
-            } // end if oneButton
+                if (MRBEAM.STATE_KEY in data) {
+                    self._fromData(data, "onDataUpdaterPluginMessage");
+                }
+            };
         }; // end onStartupComplete
 
         self.onEventJobTimeEstimated = function (payload) {
@@ -267,10 +258,10 @@ $(function () {
         // bound to both cancel buttons
         self.cancel_btn = function () {
             self._debugDaShit("cancel_btn() ");
-            if (self.is_rtl_mode()) {
-                self._setReadyToLaserCancel(true);
-            } else {
+            if (self.is_pause_mode()) {
                 self.state.cancel();
+            } else {
+                self._setReadyToLaserCancel(true);
             }
         };
 
@@ -293,32 +284,9 @@ $(function () {
             let mrb_state = payload[MRBEAM.STATE_KEY];
             if (mrb_state) {
                 // TODO: All the handling of mrb_state data should be moved into a dedicated view model
-                window.mrbeam.mrb_state = mrb_state;
-                window.STATUS = mrb_state;
+                // window.mrbeam.mrb_state = mrb_state;
+                // window.STATUS = mrb_state;
                 self.updateSettingsAbout();
-
-                if ("pause_mode" in mrb_state) {
-                    self.is_pause_mode(mrb_state["pause_mode"]);
-                }
-                if ("interlocks_closed" in mrb_state) {
-                    self.state.interlocksClosed(mrb_state["interlocks_closed"]);
-                }
-                if ("lid_fully_open" in mrb_state) {
-                    self.lid_fully_open(mrb_state["lid_fully_open"]);
-                }
-                if ("cooling_mode" in mrb_state) {
-                    self.is_cooling_mode(mrb_state["cooling_mode"]);
-                }
-                if ("fan_connected" in mrb_state) {
-                    if (mrb_state["fan_connected"] !== null) {
-                        self.is_fan_connected(mrb_state["fan_connected"]);
-                    } else {
-                        self.is_fan_connected(false);
-                    }
-                }
-                if ("rtl_mode" in mrb_state) {
-                    self.is_rtl_mode(mrb_state["rtl_mode"]);
-                }
 
                 self.setDialog();
             }
@@ -326,7 +294,14 @@ $(function () {
         };
 
         self.is_dialog_open = function () {
-            return self.is_pause_mode() || self.is_rtl_mode();
+            // return self._is_pause_mode() || self._is_rtl_mode();
+            console.log(
+                "is dialog open - ready_to_laser_state() " +
+                    self.ready_to_laser_state() +
+                    " " +
+                    self.show_dialog()
+            );
+            return self.show_dialog();
         };
 
         self._setReadyToLaserCancel = function (notifyServer) {
@@ -358,11 +333,11 @@ $(function () {
                 force
             ) {
                 var param = "show";
-                if (!self.is_rtl_mode()) {
+                if (self.is_pause_mode()) {
                     // not dismissible in paused mode
                     param = {
                         backdrop: "static",
-                        keyboard: MRBEAM_ENV_LOCAL == "DEV",
+                        keyboard: MRBEAM_ENV_LOCAL === "DEV",
                     };
                 }
 
@@ -397,7 +372,7 @@ $(function () {
         };
 
         self._sendCancelReadyToLaserMode = function () {
-            data = { rtl_cancel: true };
+            let data = { rtl_cancel: true };
             OctoPrint.simpleApiCommand(
                 MRBEAM.PLUGIN_IDENTIFIER,
                 SimpleApiCommands.READY_TO_LASER,
@@ -406,7 +381,7 @@ $(function () {
         };
 
         self._sendReadyToLaserRequest = function (ready, dev_start_button) {
-            data = { gcode: self.gcodeFile, ready: ready };
+            let data = { gcode: self.gcodeFile, ready: ready };
             if (dev_start_button) {
                 data.dev_start_button = "start";
             }
@@ -440,7 +415,7 @@ $(function () {
             self.dialogTimeoutId = -1;
 
             if (
-                self.dialogShouldBeOpen == true &&
+                self.dialogShouldBeOpen === true &&
                 !self.dialogElement.hasClass("in")
             ) {
                 self._debugDaShit(
@@ -451,7 +426,7 @@ $(function () {
                 );
                 self.showDialog(true);
             } else if (
-                self.dialogShouldBeOpen == false &&
+                self.dialogShouldBeOpen === false &&
                 self.dialogElement.hasClass("in")
             ) {
                 self._debugDaShit(
@@ -487,6 +462,16 @@ $(function () {
                 "BEAMOS_VERSION: " + MRBEAM_PLUGIN_VERSION,
                 "MRBEAM_SW_TIER: " + MRBEAM_SW_TIER,
                 "MRBEAM_ENV: " + MRBEAM_ENV,
+                "read_to_laser_state: " + self.ready_to_laser_state(),
+                "isAirfilterConnected: " +
+                    self.mrb_state.isAirfilterConnected(),
+                "isAirfilterExternalPowered: " +
+                    self.mrb_state.isAirfilterExternalPowered(),
+                "isInterlocksClosed: " + self.mrb_state.isInterlocksClosed(),
+                "isCooling: " + self.mrb_state.isCooling(),
+                "isRTLMode: " + self.mrb_state.isRTLMode(),
+                "isPaused: " + self.mrb_state.isPaused(),
+                "isLidFullyOpen: " + self.mrb_state.isLidFullyOpen(),
             ];
             $("#settings_mrbeam_debug_state").html(
                 msg.join("\n") +
@@ -512,6 +497,7 @@ $(function () {
             "loginStateViewModel",
             "printerStateViewModel",
             "laserCutterProfilesViewModel",
+            "mrbStateViewModel",
         ],
         ["#ready_to_laser_dialog"],
     ]);

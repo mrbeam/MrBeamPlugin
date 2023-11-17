@@ -14,7 +14,7 @@
 
             <ul class="camera-requirements">
                 <li class="requirement"
-                    data-bind="css: readyToLaser.lid_fully_open() == true ? 'requirement-met' : 'requirement-not-met'">
+                    data-bind="css: mrb_state.isLidFullyOpen() == true ? 'requirement-met' : 'requirement-not-met'">
                     <span data-bind="text: lidMessage()"></span>
                 </li>
                 <li class="requirement"

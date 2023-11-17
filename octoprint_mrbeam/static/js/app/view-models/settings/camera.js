@@ -18,7 +18,7 @@ $(function () {
         window.mrbeam.viewModels["cameraSettingsViewModel"] = self;
         self.camera = parameters[0];
         self.state = parameters[1]; // isOperational
-        self.readyToLaser = parameters[2]; // lid_fully_open & debug tab with mrb state
+        self.mrb_state = parameters[2]; // lid_fully_open & debug tab with mrb state
         self.settingsViewModel = parameters[3];
         self.workingArea = parameters[4];
         self.loginState = parameters[5];
@@ -46,7 +46,7 @@ $(function () {
         // we say that the markers were not found (if they were, of course)
         self.fourMarkersFound = ko.computed(function () {
             return (
-                self.readyToLaser.lid_fully_open() &&
+                self.mrb_state.isLidFullyOpen() &&
                 self.statusOnlyOperational() &&
                 self.camera.markerState() === 4
             );
@@ -64,7 +64,7 @@ $(function () {
 
         self.cameraStatusOk = ko.computed(function () {
             return (
-                self.readyToLaser.lid_fully_open() &&
+                self.mrb_state.isLidFullyOpen() &&
                 self.statusOnlyOperational() &&
                 self.fourMarkersFound() &&
                 !self.camera.needsCornerCalibration()
@@ -72,7 +72,7 @@ $(function () {
         });
 
         self.lidMessage = ko.computed(function () {
-            return self.readyToLaser.lid_fully_open()
+            return self.mrb_state.isLidFullyOpen()
                 ? gettext("The lid is open")
                 : gettext(
                       "The lid is closed: Please open the lid to start the camera"
@@ -327,8 +327,8 @@ $(function () {
 
         self.forceTakeNewPicture = function () {
             if (
-                self.readyToLaser.lid_fully_open() &&
-                !self.readyToLaser.state.interlocksClosed() &&
+                self.mrb_state.isLidFullyOpen() &&
+                !self.mrb_state.isInterlocksClosed() &&
                 !self.lensDaemonAlive()
             ) {
                 OctoPrint.simpleApiCommand(
@@ -348,7 +348,7 @@ $(function () {
         [
             "cameraViewModel",
             "printerStateViewModel",
-            "readyToLaserViewModel",
+            "mrbStateViewModel",
             "settingsViewModel",
             "workingAreaViewModel",
             "loginStateViewModel",
