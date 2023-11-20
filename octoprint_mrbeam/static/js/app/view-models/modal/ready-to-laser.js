@@ -14,9 +14,6 @@ $(function () {
         self.mrb_state = params[3];
 
         self.dialogElement = $(); // initialize not to undefined
-        self.dialogShouldBeOpen = false;
-        self.dialogIsInTransition = false;
-        self.dialogTimeoutId = -1;
         self.gcodeFile = undefined;
 
         self.jobTimeEstimationString = ko.observable(
@@ -24,7 +21,7 @@ $(function () {
         );
         self.jobTimeEstimationCalculated = ko.observable(false);
 
-        self.DEBUG = false;
+        self.debug = false;
 
         const Status = {
             READY_TO_LASER: "READY_TO_LASER",
@@ -36,67 +33,49 @@ $(function () {
             UNKNOWN: "UNKNOWN",
             OK: "OK",
         };
+        self.status = Status;
 
-        self.ready_to_laser_state = ko.computed(function () {
-            if (
-                self.mrb_state.isRTLMode() !== undefined &&
-                self.mrb_state.isPaused() !== undefined &&
-                (self.mrb_state.isRTLMode() || self.mrb_state.isPaused())
-            ) {
-                if (
-                    self.mrb_state.isAirfilterConnected() !== undefined &&
-                    !self.mrb_state.isAirfilterConnected()
-                ) {
-                    return Status.FAN_NOT_CONNECTED;
-                } else if (
-                    self.mrb_state.isAirfilterExternalPowered() !== undefined &&
-                    !self.mrb_state.isAirfilterExternalPowered()
-                ) {
-                    return Status.FAN_NOT_ON_EXTERNAL_POWER;
-                } else if (
-                    self.mrb_state.isInterlocksClosed() !== undefined &&
-                    !self.mrb_state.isInterlocksClosed()
-                ) {
-                    return Status.LID_OPEN;
-                } else if (
-                    self.mrb_state.isCooling() !== undefined &&
-                    self.mrb_state.isCooling()
-                ) {
-                    return Status.COOLING;
-                } else if (
-                    self.mrb_state.isRTLMode() !== undefined &&
-                    self.mrb_state.isRTLMode()
-                ) {
-                    return Status.READY_TO_LASER;
-                } else if (
-                    self.mrb_state.isPaused() !== undefined &&
-                    self.mrb_state.isPaused()
-                ) {
-                    return Status.PAUSED;
+        self.ready_to_laser_state = ko
+            .computed(function () {
+                const isRTLMode = self.mrb_state.isRTLMode();
+                const isPaused = self.mrb_state.isPaused();
+                if (isRTLMode || isPaused) {
+                    if (self.mrb_state.isAirfilterConnected() === false) {
+                        return Status.FAN_NOT_CONNECTED;
+                    } else if (
+                        self.mrb_state.isAirfilterExternalPowered() === false
+                    ) {
+                        return Status.FAN_NOT_ON_EXTERNAL_POWER;
+                    } else if (self.mrb_state.isInterlocksClosed() === false) {
+                        return Status.LID_OPEN;
+                    } else if (self.mrb_state.isCooling()) {
+                        return Status.COOLING;
+                    } else if (isRTLMode) {
+                        return Status.READY_TO_LASER;
+                    } else if (isPaused) {
+                        return Status.PAUSED;
+                    } else {
+                        return Status.UNKNOWN;
+                    }
                 } else {
-                    return Status.UNKNOWN;
+                    return Status.OK;
                 }
-            } else {
-                return Status.OK;
-            }
-        });
+            })
+            .extend({ deferred: true }); // deferred to prevent multiple changes in a short time
+
         self.is_pause_mode = ko.computed(function () {
-            return (
-                self.ready_to_laser_state() === Status.PAUSED ||
-                self.ready_to_laser_state() === Status.COOLING
-            );
+            const rtl_state = self.ready_to_laser_state();
+            return rtl_state === Status.PAUSED || rtl_state === Status.COOLING;
         });
-        self.show_dialog = ko.computed(function () {
-            console.log(
-                "show_dialog() " +
-                    self.ready_to_laser_state() +
-                    " " +
-                    Status.OK +
-                    " " +
-                    (self.ready_to_laser_state() === Status.OK) +
-                    (self.ready_to_laser_state() !== Status.OK)
-            );
-            return self.ready_to_laser_state() !== Status.OK;
+        self.show_dialog = ko
+            .computed(function () {
+                return self.ready_to_laser_state() !== Status.OK;
+            })
+            .extend({ rateLimit: 300 }); // rateLimit to prevent flickering
+
+        //subscribe to show dialog to show or hide the modal
+        self.show_dialog.subscribe(function (newValue) {
+            self.setDialog();
         });
 
         self.lid_open = ko.computed(function () {
@@ -120,29 +99,35 @@ $(function () {
             return self.ready_to_laser_state() === Status.PAUSED;
         });
 
-        self.debug = function (triggerEvent) {
-            console.log(
-                "ReadyToLaserViewModel.debug: (" +
-                    triggerEvent +
-                    ") is_rtl_mode: " +
-                    self.ready_to_laser() +
-                    ", is_pause_mode: " +
-                    self.paused() +
-                    ", lid_open: " +
-                    self.lid_open() +
-                    ", self.lid_fully_open" +
-                    self.mrb_state.isLidFullyOpen() +
-                    ", is_cooling_mode: " +
-                    self.cooling() +
-                    ", is_fan_connected" +
-                    self.fan_not_connected() +
-                    ", $('#ready_to_laser_dialog').is(':visible'): " +
-                    $("#ready_to_laser_dialog").is(":visible") +
-                    ", $('#laser_job_done_dialog').is(':visible'): " +
-                    $("#laser_job_done_dialog").is(":visible") +
-                    ", mrb_state: " +
-                    JSON.stringify(window.mrbeam.mrb_state)
-            );
+        self.debug_log = function (triggerEvent) {
+            if (self.debug) {
+                console.log(
+                    "ReadyToLaserViewModel.debug: (" +
+                        triggerEvent +
+                        ") is_rtl_mode: " +
+                        self.ready_to_laser() +
+                        ", ready_to_laser_state: " +
+                        self.ready_to_laser_state() +
+                        ", paused: " +
+                        self.paused() +
+                        ", is_pause_mode: " +
+                        self.is_pause_mode() +
+                        ", lid_open: " +
+                        self.lid_open() +
+                        ", is_cooling_mode: " +
+                        self.cooling() +
+                        ", is_fan_connected" +
+                        self.fan_not_connected() +
+                        ", fan_not_on_external_power" +
+                        self.fan_not_on_external_power() +
+                        ", $('#ready_to_laser_dialog').is(':visible'): " +
+                        $("#ready_to_laser_dialog").is(":visible") +
+                        ", $('#laser_job_done_dialog').is(':visible'): " +
+                        $("#laser_job_done_dialog").is(":visible") +
+                        ", mrb_state: " +
+                        JSON.stringify(window.mrbeam.mrb_state)
+                );
+            }
         };
 
         self.onStartupComplete = function () {
@@ -153,6 +138,7 @@ $(function () {
             $("#laser_button").on("click", function () {
                 self.resetJobTimeEstimation();
             });
+            self.setDialog();
 
             if (MRBEAM_ENV_LOCAL === "DEV") {
                 $(".dev_start_button").on("click", function () {
@@ -268,9 +254,9 @@ $(function () {
         self._fromData = function (payload, event) {
             // this is just for debugging
             if (event) {
-                self.debug(event);
+                self.debug_log(event);
                 setTimeout(function () {
-                    self.debug(event);
+                    self.debug_log(event);
                 }, 1000);
             }
 
@@ -284,13 +270,7 @@ $(function () {
             let mrb_state = payload[MRBEAM.STATE_KEY];
             if (mrb_state) {
                 self.updateSettingsAbout();
-
-                self.setDialog();
             }
-        };
-
-        self.is_dialog_open = function () {
-            return self.show_dialog();
         };
 
         self._setReadyToLaserCancel = function (notifyServer) {
@@ -306,58 +286,44 @@ $(function () {
         };
 
         self.setDialog = function () {
-            if (self.is_dialog_open()) {
+            if (self.show_dialog()) {
                 self.showDialog();
-            } else {
+            } else if (!self.show_dialog()) {
                 self.hideDialog();
+            } else {
+                self._debugDaShit("setDialog() nothing to do");
             }
         };
 
         self.showDialog = function (force) {
             self._debugDaShit("showDialog() " + (force ? "force!" : ""));
-            self.dialogShouldBeOpen = true;
-            if (
-                (!self.dialogIsInTransition &&
-                    !self.dialogElement.hasClass("in")) ||
-                force
-            ) {
-                var param = "show";
-                if (self.is_pause_mode()) {
-                    // not dismissible in paused mode
-                    param = {
-                        backdrop: "static",
-                        keyboard: MRBEAM_ENV_LOCAL === "DEV",
-                    };
-                }
 
-                self._debugDaShit("showDialog() dialogIsInTransition <= true");
-                self.dialogIsInTransition = true;
-                self._debugDaShit("showDialog() show");
-                self.dialogElement.modal(param);
-
-                self._setTimeoutForDialog();
-            } else {
-                self._debugDaShit("showDialog() skip");
+            var param = "show";
+            if (self.is_pause_mode()) {
+                // not dismissible in paused mode
+                param = {
+                    backdrop: "static",
+                    keyboard: MRBEAM_ENV_LOCAL === "DEV",
+                };
             }
+
+            self._debugDaShit("showDialog() dialogIsInTransition <= true");
+            self._debugDaShit("showDialog() show");
+            self.dialogElement.modal(param);
         };
 
         self.hideDialog = function (force) {
             self._debugDaShit("hideDialog() " + (force ? "force!" : ""));
-            self.dialogShouldBeOpen = false;
-            if (
-                (!self.dialogIsInTransition &&
-                    self.dialogElement.hasClass("in")) ||
-                force
-            ) {
-                self._debugDaShit("hideDialog() dialogIsInTransition <= true");
-                self.dialogIsInTransition = true;
-                self._debugDaShit("hideDialog() hide");
-                self.dialogElement.modal("hide");
+            self._debugDaShit("hideDialog() hide");
+            self.dialogElement.modal("hide");
+        };
 
-                self._setTimeoutForDialog();
-            } else {
-                self._debugDaShit("hideDialog() skip");
-            }
+        self.refreshBindings = function () {
+            ko.cleanNode(document.getElementById("ready_to_laser_dialog"));
+            ko.applyBindings(
+                self,
+                document.getElementById("ready_to_laser_dialog")
+            );
         };
 
         self._sendCancelReadyToLaserMode = function () {
@@ -379,58 +345,6 @@ $(function () {
                 SimpleApiCommands.READY_TO_LASER,
                 data
             );
-        };
-
-        self._setTimeoutForDialog = function () {
-            if (self.dialogTimeoutId < 0) {
-                self.dialogTimeoutId = setTimeout(
-                    self._timoutCallbackForDialog,
-                    500
-                );
-                self._debugDaShit(
-                    "_setTimeoutForDialog() timeout id: " + self.dialogTimeoutId
-                );
-            } else {
-                self._debugDaShit(
-                    "_setTimeoutForDialog() already timeout existing, id" +
-                        self.dialogTimeoutId
-                );
-            }
-        };
-
-        self._timoutCallbackForDialog = function () {
-            self._debugDaShit("_timoutCallbackForDialog() ");
-            clearTimeout(self.dialogTimeoutId);
-            self.dialogTimeoutId = -1;
-
-            if (
-                self.dialogShouldBeOpen === true &&
-                !self.dialogElement.hasClass("in")
-            ) {
-                self._debugDaShit(
-                    "_timoutCallbackForDialog() calling showDialog() : self.dialogShouldBeOpen=" +
-                        self.dialogShouldBeOpen +
-                        ", self.dialogElement.hasClass('in')" +
-                        self.dialogElement.hasClass("in")
-                );
-                self.showDialog(true);
-            } else if (
-                self.dialogShouldBeOpen === false &&
-                self.dialogElement.hasClass("in")
-            ) {
-                self._debugDaShit(
-                    "_timoutCallbackForDialog() calling hideDialog() : self.dialogShouldBeOpen=" +
-                        self.dialogShouldBeOpen +
-                        ", self.dialogElement.hasClass('in')" +
-                        self.dialogElement.hasClass("in")
-                );
-                self.hideDialog(true);
-            } else {
-                self._debugDaShit(
-                    "_timoutCallbackForDialog() dialogIsInTransition <= false"
-                );
-                self.dialogIsInTransition = false;
-            }
         };
 
         self.updateSettingsAbout = function () {
@@ -470,7 +384,7 @@ $(function () {
         };
 
         self._debugDaShit = function (stuff) {
-            if (self.DEBUG) {
+            if (self.debug) {
                 if (typeof stuff === "object") {
                     console.log("_debugDaShit " + stuff.shift(), stuff);
                 } else {

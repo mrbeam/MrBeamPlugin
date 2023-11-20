@@ -2,17 +2,28 @@ $(function () {
     function MrbStateViewModel(parameters) {
         const self = this;
         window.mrbeam.viewModels["mrbStateModel"] = self;
+        self.isCooling = ko.observable(undefined).extend({ deferred: true });
+        self.isAirfilterConnected = ko
+            .observable(undefined)
+            .extend({ deferred: true });
+        self.isAirfilterExternalPowered = ko
+            .observable(undefined)
+            .extend({ deferred: true });
+        self.isRTLMode = ko.observable(undefined).extend({ deferred: true });
+        self.isPaused = ko.observable(undefined).extend({ deferred: true });
+        self.isInterlocksClosed = ko
+            .observable(undefined)
+            .extend({ deferred: true });
+        self.isLidFullyOpen = ko
+            .observable(undefined)
+            .extend({ deferred: true });
 
-        self.isCooling = ko.observable(undefined);
-        self.isAirfilterConnected = ko.observable(undefined);
-        self.isAirfilterExternalPowered = ko.observable(undefined);
-        self.isRTLMode = ko.observable(undefined);
-        self.isPaused = ko.observable(undefined);
-        self.isInterlocksClosed = ko.observable(undefined);
-        self.isLidFullyOpen = ko.observable(undefined);
-
-        self.airfilter_model = ko.observable(undefined);
-        self.airfilter_serial = ko.observable(undefined);
+        self.airfilter_model = ko
+            .observable(undefined)
+            .extend({ deferred: true });
+        self.airfilter_serial = ko
+            .observable(undefined)
+            .extend({ deferred: true });
 
         self.onEventReadyToLaserStart = function (payload) {
             /**

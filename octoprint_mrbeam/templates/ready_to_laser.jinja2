@@ -1,43 +1,42 @@
 <div id="ready_to_laser_dialog" class="modal hide fade" data-backdrop="static"
      data-test="mrbeam-ui-modal-ready-to-laser">
         <div class="modal-header">
-            <a href="#" class="close" data-bind='visible: !is_pause_mode(), click: cancel_btn'
+            <a href="#" class="close" data-bind='visible: !is_pause_mode,q click: cancel_btn'
                aria-hidden="true">&times;</a>
             <h3 data-bind='visible: !is_pause_mode()'>{{ _('Ready To Laser?') }}</h3>
-            <h3 data-bind='visible: paused()'>{{ _('Pause') }}</h3>
-            <h3 data-bind='visible: cooling()'>{{ _('Cooling') }}</h3>
-            <span data-bind="text: ready_to_laser_state()">state</span>
+            <h3 data-bind='visible: paused'>{{ _('Pause') }}</h3>
+            <h3 data-bind='visible: cooling'>{{ _('Cooling') }}</h3>
         </div>
-        <div class="modal-body" data-bind="visible: fan_not_connected()">
+        <div class="modal-body" data-bind="visible: fan_not_connected">
             <img src="/plugin/mrbeam/static/img/airfilter.jpg">
             <h5>{{ _('Can not detect air filter system. Is it plugged in?') }}</h5>
         </div>
 
-        <div class="modal-body" data-bind="visible: fan_not_on_external_power()">
+        <div class="modal-body" data-bind="visible: fan_not_on_external_power">
             <img src="/plugin/mrbeam/static/img/air_filter/af3-power-supply-missing.png">
             <h5>{{ _("Air filter system doesn't see external power. Is it plugged in?") }}</h5>
         </div>
 
-        <div class="modal-body" data-bind="visible: lid_open()">
+        <div class="modal-body" data-bind="visible: lid_open">
             <img src="/plugin/mrbeam/static/img/closelid.jpg">
             <h5>{{ _('Please close the lid completely before we can proceed.') }}</h5>
         </div>
 
-        <div class="modal-body" data-bind="visible: ready_to_laser()">
+        <div class="modal-body" data-bind="visible: ready_to_laser">
             <img src="/plugin/mrbeam/static/img/onebutton.jpg">
             <h5>{{ _('Everything is ready to go.') }}</h5>
-            <h5 data-bind="visible: jobTimeEstimationCalculated()">
+            <h5 data-bind="visible: jobTimeEstimationCalculated">
                 {{ _('Estimated duration') }}:
-                <span data-bind="text: jobTimeEstimationString()" style="font-size: 1.2em"></span>
+                <span data-bind="text: jobTimeEstimationString" style="font-size: 1.2em"></span>
             </h5>
         </div>
 
-        <div class="modal-body" data-bind="visible: paused()">
+        <div class="modal-body" data-bind="visible: paused() || ready_to_laser_state() === status.OK">
             <img src="/plugin/mrbeam/static/img/onebutton.jpg">
             <h5>{{ _('Everything is ready to go.') }}</h5>
         </div>
 
-        <div class="modal-body" data-bind="visible: cooling()">
+        <div class="modal-body" data-bind="visible: cooling">
             <img src="/plugin/mrbeam/static/img/cooling.jpg">
             {#  Mr Beam macht eine Kühlpause. Der Laserjob wird so bald wie möglich fortgesetzt. Sollten die Kühlpausen häufiger auftreten, reinige bitte deinen Laserkopf. Falls du den Laserkopf gerade gereinigt haben, überprüfe, ob dieser wieder richtig zusammengebaut ist.          #}
             <h5>{{ _('Mr Beam is pausing for a cooling break. The laser job will resume as soon as possible.') }}</h5>
@@ -54,21 +53,31 @@
         <div class="modal-footer">
             <a class="btn pull-left" data-bind='visible: !is_pause_mode(), click: cancel_btn'
                aria-hidden="true">{{ _('cancel') }}</a>
-            <a class="btn pull-left" data-bind='visible: is_pause_mode(), click: cancel_btn'
+            <a class="btn pull-left" data-bind='visible: is_pause_mode, click: cancel_btn'
                aria-hidden="true">{{ _('Cancel Laser Job') }}</a>
 
             <h4 class="pull-right" data-bind='visible: fan_not_connected() || fan_not_on_external_power()'>{{ _('Plug in air filter system') }}</h4>
             <h4 class="pull-right"
-                data-bind='visible: lid_open()'>{{ _('Close the lid') }}</h4>
+                data-bind='visible: lid_open'>{{ _('Close the lid') }}</h4>
             <h4 id="ready_to_laser_dev_start_btn" data-test="mrbeam-ui-rady-to-laser-start-text"
                 class="pull-right dev_start_button"
-                data-bind='visible: ready_to_laser()'>
+                data-bind='visible: ready_to_laser'>
                 {{ _('Press the button to start') }}
             </h4>
             <h4 id="ready_to_laser_dev_resume_btn" class="pull-right dev_start_button"
-                data-bind='visible: paused()'>
+                data-bind='visible: paused'>
                 {{ _('Press the button to continue') }}
             </h4>
-            <h4 class="pull-right" data-bind='visible: cooling()'>{{ _('Please wait') }}</h4>
+            <h4 class="pull-right" data-bind='visible: cooling'>{{ _('Please wait') }}</h4>
+            <div class="pull-right" data-bind="visible: debug">
+                <span data-bind="text: ready_to_laser_state">state</span></br>
+                <span data-bind="text: fan_not_connected">fan_not_connected</span></br>
+                <span data-bind="text: fan_not_on_external_power">fan_not_on_external_power</span></br>
+                <span data-bind="text: lid_open">lid_open</span></br>
+                <span data-bind="text: ready_to_laser">ready_to_laser</span></br>
+                <span data-bind="text: paused">paused</span></br>
+                <span data-bind="text: cooling">cooling</span></br>
+                <span data-bind="text: is_pause_mode">is_pause_mode</span>
+            </div>
         </div>
 </div>
