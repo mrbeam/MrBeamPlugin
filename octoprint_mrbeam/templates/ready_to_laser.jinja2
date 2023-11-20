@@ -1,7 +1,7 @@
 <div id="ready_to_laser_dialog" class="modal hide fade" data-backdrop="static"
      data-test="mrbeam-ui-modal-ready-to-laser">
         <div class="modal-header">
-            <a href="#" class="close" data-bind='visible: !is_pause_mode,q click: cancel_btn'
+            <a href="#" class="close" data-bind='visible: !is_pause_mode(), click: cancel_btn'
                aria-hidden="true">&times;</a>
             <h3 data-bind='visible: !is_pause_mode()'>{{ _('Ready To Laser?') }}</h3>
             <h3 data-bind='visible: paused'>{{ _('Pause') }}</h3>
