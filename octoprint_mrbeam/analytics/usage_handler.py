@@ -976,9 +976,9 @@ class UsageHandler(object):
         )
 
         # calculate the total percentage
-        total_percentage = max(pressure_percentage, time_percentage)
+        total_percentage = max(pressure_percentage, min(time_percentage, 80))
         logger.debug(
-            "pressure_percentage: {} time_percentage: {} rpm_percentage: {} total percentag: {}".format(
+            "pressure_percentage: {} time_percentage: {} rpm_percentage: {} total percentage: {}".format(
                 pressure_percentage, time_percentage, rpm_percentage, total_percentage
             )
         )
