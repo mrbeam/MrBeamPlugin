@@ -170,7 +170,9 @@ $(function () {
                 ),
                 safety_notes: "",
                 type: "collection",
-                url: gettext("https://www.mr-beam.org/en/collections/filz"),
+                url: gettext(
+                    "https://www.mr-beam.org/en/collections/filz-schaumstoff"
+                ),
             },
             "Fabric Cotton": null,
             "Fabric Polyester": null,
@@ -479,6 +481,19 @@ $(function () {
                 ),
                 type: null,
                 url: null,
+            },
+            "Glitter Felt": {
+                name: gettext("Glitter Felt"),
+                img: "Glitter-Felt.png",
+                description: "",
+                hints: "",
+                safety_notes: gettext(
+                    "Please mirror your file and only cut from the back so that the reflective side is facing down! Reflective materials that are lasered from the front can damage the laser lens!"
+                ),
+                type: "product",
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/mr-beam-glitzer-acryl-filz"
+                ),
             },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
