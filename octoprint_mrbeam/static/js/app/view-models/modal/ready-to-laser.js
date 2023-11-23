@@ -278,7 +278,7 @@ $(function () {
                 "_setReadyToLaserCancel() notifyServer: ",
                 notifyServer
             );
-            self.hideDialog();
+            self.dialogElement.modal("hide");
             if (notifyServer) {
                 self._sendCancelReadyToLaserMode();
             }
@@ -289,7 +289,7 @@ $(function () {
             if (self.show_dialog()) {
                 self.showDialog();
             } else if (!self.show_dialog()) {
-                self.hideDialog();
+                self.dialogElement.modal("hide");
             } else {
                 self._debugDaShit("setDialog() nothing to do");
             }
@@ -310,12 +310,6 @@ $(function () {
             self._debugDaShit("showDialog() dialogIsInTransition <= true");
             self._debugDaShit("showDialog() show");
             self.dialogElement.modal(param);
-        };
-
-        self.hideDialog = function (force) {
-            self._debugDaShit("hideDialog() " + (force ? "force!" : ""));
-            self._debugDaShit("hideDialog() hide");
-            self.dialogElement.modal("hide");
         };
 
         self.refreshBindings = function () {
