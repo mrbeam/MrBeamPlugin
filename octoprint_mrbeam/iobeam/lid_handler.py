@@ -93,7 +93,7 @@ class LidHandler(object):
         self._printer = plugin._printer
         self._plugin_manager = plugin._plugin_manager
         self._laserCutterProfile = (
-            plugin.laserCutterProfileManager.get_current_or_default()
+            plugin.laser_cutter_profile_service.get_current_or_default()
         )
         self._logger = mrb_logger(
             "octoprint.plugins.mrbeam.iobeam.lidhandler", logging.INFO

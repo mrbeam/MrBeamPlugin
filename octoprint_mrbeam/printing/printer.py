@@ -8,6 +8,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
 from octoprint_mrbeam.util import dict_merge
 from octoprint_mrbeam.util.errors import ErrorCodes
+from octoprint_mrbeam.service.profile.laser_cutter_profile import laser_cutter_profile_service
 
 
 class Laser(Printer):
@@ -49,6 +50,9 @@ class Laser(Printer):
         )
         self._user_notification_system = None
 
+        # We are overriding this attribute that is used in OctoPrint's Printer class
+        self._printerProfileManager = laser_cutter_profile_service()
+
         self._event_bus = eventManager()
         self._event_bus.subscribe(
             MrBeamEvents.LASER_JOB_ABORT, self._on_laser_job_abort
@@ -72,8 +76,9 @@ class Laser(Printer):
         if self._comm is not None:
             self._comm.close()
 
-        eventManager().fire(Events.CONNECTING, payload=dict(profile=profile))
-        self._printerProfileManager.select(profile)
+        eventManager().fire(Events.CONNECTING, payload=dict(profile=self._printerProfileManager.get_current_or_default()['id']))
+        # TODO: SW-4080: Handle when switching the profiles in realtime
+        # self._printerProfileManager.select(profile)
         self._comm = comm.MachineCom(
             port,
             baudrate,
@@ -92,7 +97,24 @@ class Laser(Printer):
         self._comm.setColors(currentFileName, value)
 
     # extend commands: home, position, increase_passes, decrease_passes
-    def home(self, axes):
+    def home(self, axes="xy"):
+        """
+        Home the printer.
+        Commands to be sent to the printer in order to home:
+            Command 1: "$H" = Move to home position
+            Command 2: command = set coordinate origin
+            Command 3: "G21" = set units to millimeters
+            Command 4: "G91" = set relative coordinate mode
+            Command 5: moving_command = move to after homing position
+            Command 6: "G90" = set absolute coordinate mode
+
+        Args:
+            axes: axes to home, default is "xy"
+            This is not used in the plugin, but kept for compatibility with the original implementation
+
+        Returns:
+            None
+        """
         printer_profile = self._printerProfileManager.get_current_or_default()
         params = dict(
             x=printer_profile["volume"]["width"]
@@ -100,10 +122,17 @@ class Laser(Printer):
             y=printer_profile["volume"]["depth"]
             + printer_profile["volume"]["working_area_shift_y"],
             z=0,
+            after_homing_shift_x=printer_profile["volume"]["after_homing_shift_x"],
+            after_homing_shift_y=printer_profile["volume"]["after_homing_shift_y"],
+            after_homing_shift_rate=printer_profile["volume"]["after_homing_shift_rate"],
         )
         self._comm.rescue_from_home_pos()
         command = "G92X{x}Y{y}Z{z}".format(**params)
-        self.commands(["$H", command, "G90", "G21"])
+
+        # Moving command after homing
+        moving_command = "G1X{after_homing_shift_x}Y{after_homing_shift_y}F{after_homing_shift_rate}".format(**params)
+
+        self.commands(["$H", command, "G21", "G91", moving_command, "G90"])
 
     def is_homed(self):
         return self._stateMonitor._machinePosition == self.HOMING_POSITION
@@ -112,7 +141,7 @@ class Laser(Printer):
         """Cancel the current printjob and do homing."""
         super(Laser, self).cancel_print()
         time.sleep(0.5)
-        self.home(axes="wtf")
+        self.home()
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
     def fail_print(self, error_msg=None):
@@ -124,7 +153,7 @@ class Laser(Printer):
         self._comm.cancelPrint(failed=True, error_msg=error_msg)
 
         time.sleep(0.5)
-        self.home(axes="wtf")
+        self.home()
         self._show_job_cancelled_due_to_internal_error()
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
@@ -139,7 +168,7 @@ class Laser(Printer):
         """
         self._comm.abort_lasering(event)
         time.sleep(0.5)
-        self.home(axes="wtf")
+        self.home()
         self._event_bus.fire(MrBeamEvents.LASER_JOB_ABORTED, {"trigger": event})
 
     def position(self, x, y):

@@ -1526,7 +1526,7 @@ class AnalyticsHandler(object):
     def _init_new_job(self):
         self._cleanup_job()
         self._current_job_id = "j_{}_{}".format(self._snr, time.time())
-        self._add_job_event(AnalyticsKeys.Job.Event.LASERJOB_STARTED, payload=payload)
+        self._add_job_event(AnalyticsKeys.Job.Event.LASERJOB_STARTED, payload=None)
 
     # -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
     def _write_queue_to_analytics_file(self):

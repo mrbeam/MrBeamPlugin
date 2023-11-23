@@ -55,7 +55,7 @@ class TemperatureManager(object):
             self._plugin.laserhead_handler.current_laserhead_high_temperature_warn_offset
         )
         self.cooling_duration = (
-            plugin.laserCutterProfileManager.get_current_or_default()["laser"][
+            plugin.laser_cutter_profile_service.get_current_or_default()["laser"][
                 "cooling_duration"
             ]
         )
@@ -147,7 +147,7 @@ class TemperatureManager(object):
             self._plugin.laserhead_handler.current_laserhead_high_temperature_warn_offset
         )
         self.cooling_duration = (
-            self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
+            self._plugin.laser_cutter_profile_service.get_current_or_default()["laser"][
                 "cooling_duration"
             ]
         )

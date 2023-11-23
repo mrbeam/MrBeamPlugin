@@ -1,9 +1,9 @@
-# Default config for the Mr beam laser cutter
+# Default profile for the Mr beam laser cutter in default mode and a non-2C series
 
 __all__ = ["profile"]
 
 profile = dict(
-    id="_default",
+    id="default",
     name="MrBeam2",
     model="X",
     axes=dict(
@@ -47,6 +47,9 @@ profile = dict(
         width=500.0,
         working_area_shift_x=7.0,
         working_area_shift_y=0.0,
+        after_homing_shift_x=0.0,
+        after_homing_shift_y=0.0,
+        after_homing_shift_rate=5000,
     ),
     grbl=dict(
         resetOnConnect=True,

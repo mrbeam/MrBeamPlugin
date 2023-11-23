@@ -1,7 +1,7 @@
 import pytest
 
 from octoprint_mrbeam.enums.laser_cutter_mode import LaserCutterModeEnum
-from octoprint_mrbeam.services.laser_cutter_mode import LaserCutterModeService
+from octoprint_mrbeam.service.laser_cutter_mode import LaserCutterModeService
 
 
 @pytest.fixture

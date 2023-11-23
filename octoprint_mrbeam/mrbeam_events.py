@@ -71,6 +71,7 @@ class MrBeamEvents(object):
     HARDWARE_MALFUNCTION = "HardwareMalfunction"
 
     LASER_HEAD_READ = "LaserHeadRead"
+    LASER_CUTTER_PROFILE_INITIALIZED = "LaserCutterProfileInitialized"
 
     # Camera Calibration Screen Events
     RAW_IMAGE_TAKING_START = "RawImageTakingStart"

@@ -50,7 +50,7 @@ class MrbFileManager(FileManager):
             self,
             self._plugin._analysis_queue,
             self._plugin._slicing_manager,
-            self._plugin.laserCutterProfileManager,
+            self._plugin.laser_cutter_profile_service,
             initial_storage_managers=storage_managers,
         )
 

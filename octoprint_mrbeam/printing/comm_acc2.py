@@ -33,14 +33,14 @@ from octoprint.util import (
 )
 
 from octoprint_mrbeam.notifications import NotificationIds
-from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-
+from octoprint_mrbeam.service.profile.laser_cutter_profile import laser_cutter_profile_service
+from octoprint_mrbeam.constant.profile import laser_cutter as laser_cutter_profiles
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -160,11 +160,16 @@ class MachineCom(object):
                 baudrate = settingsBaudrate
         if callbackObject is None:
             callbackObject = MachineComPrintCallback()
+        if printerProfileManager:
+            laser_cutter_profile = printerProfileManager().get_current_or_default()
+        else:
+            laser_cutter_profile = laser_cutter_profiles.default_profile
 
         self._port = port
         self._baudrate = baudrate
         self._callback = callbackObject
-        self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
+
+        self._laserCutterProfile = laser_cutter_profile
 
         self._state = self.STATE_NONE
         self._grbl_state = None
@@ -1536,7 +1541,7 @@ class MachineCom(object):
                         )
                         commands.append("${id}={val}".format(id=id, val=value))
                     elif my_grbl_settings[id]["value"] != value:
-                        self._logger.error(
+                        self._logger.warn(
                             "GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
                             id,
                             my_grbl_settings[id]["value"],
@@ -1948,7 +1953,7 @@ class MachineCom(object):
                 try:
                     self._laserCutterProfile["grbl"]["auto_update_file"] = None
                     self._laserCutterProfile["grbl"]["auto_update_version"] = None
-                    laserCutterProfileManager().save(
+                    laser_cutter_profile_service().save(
                         self._laserCutterProfile, allow_overwrite=True
                     )
                 except Exception:
@@ -2847,7 +2852,7 @@ class MachineCom(object):
         except:
             self._logger.exception("Exception in _set_air_pressure() ")
 
-    def _set_compressor_pause(self, paused):
+    def _set_compressor_pause(self):
         try:
             _mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
         except:

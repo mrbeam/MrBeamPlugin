@@ -8,8 +8,8 @@ from octoprint.settings import Settings
 from octoprint_mrbeamdoc.enum.mrbeam_model import MrBeamModel
 
 from octoprint_mrbeam import DocumentService, SWUpdateTier
-from octoprint_mrbeam.services import settings_service
-from octoprint_mrbeam.services.settings_service import SettingsService
+from octoprint_mrbeam.service import settings_service
+from octoprint_mrbeam.service.settings_service import SettingsService
 from tests.logger.test_logger import LoggerMock
 
 
@@ -35,7 +35,7 @@ class TestSettingsService(TestCase):
         settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
         self._validate_settings_model(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get',
+    @patch('octoprint_mrbeam.service.settings_service.requests.get',
            side_effect=requests.exceptions.RequestException())
     def test_get_template_settings_model_with_no_internet__then_return_settings_with_empty_material_store_settings(
             self, requests_mock):
@@ -43,16 +43,16 @@ class TestSettingsService(TestCase):
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load', side_effect=yaml.YAMLError())
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load', side_effect=yaml.YAMLError())
     def test_get_template_settings_model_with_yaml_issue_in_material_store__then_empty_material_store_settings(
             self, yaml_mock, requests_mock):
         settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load')
     def test_get_template_settings_model_with_none_material_store_settings__then_empty_material_store_settings(self,
                                                                                                                yaml_mock, requests_mock):
         yaml_mock.return_value = None
@@ -60,8 +60,8 @@ class TestSettingsService(TestCase):
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load')
     def test_get_template_settings_model_with_empty_material_store_settings__then_empty_material_store_settings(self,
                                                                                                                 yaml_mock, requests_mock):
         yaml_mock.return_value = {}
@@ -69,8 +69,8 @@ class TestSettingsService(TestCase):
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load')
     def test_get_template_settings_model_with_no_material_store_settings__then_empty_material_store_settings(self,
                                                                                                              yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {}}
@@ -78,8 +78,8 @@ class TestSettingsService(TestCase):
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load')
     def test_get_template_settings_model_with_no_environment_material_store_settings__then_empty_material_store_settings(
             self, yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {'environment': {}}}
@@ -87,8 +87,8 @@ class TestSettingsService(TestCase):
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load')
     def test_get_template_settings_model_with_no_matching_environment_material_store_settings__then_empty_material_store_settings(
             self, yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {
@@ -97,8 +97,8 @@ class TestSettingsService(TestCase):
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load')
     def test_get_template_settings_model_with_no_url_material_store_settings__then_empty_material_store_settings(self,
                                                                                                                  yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {
@@ -107,8 +107,8 @@ class TestSettingsService(TestCase):
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load')
     def test_get_template_settings_model_with_no_enabled_material_store_settings__then_empty_material_store_settings(
             self, yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {
@@ -117,8 +117,8 @@ class TestSettingsService(TestCase):
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load')
     def test_get_template_settings_model_with_no_healthcheck_url_material_store_settings__then_empty_material_store_settings(
             self, yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {
@@ -127,8 +127,8 @@ class TestSettingsService(TestCase):
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch('octoprint_mrbeam.service.settings_service.requests.get')
+    @patch('octoprint_mrbeam.service.settings_service.yaml.load')
     def test_get_template_settings_model_with_correct_material_store_settings__then_valid_settings(self, yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {
             'environment': {'prod': {'url': 'https://test.material.store.mr-beam.org', 'enabled': True, 'healthcheck_url': 'https://test.material.store.mr-beam.org/api/healthcheck'}}}}

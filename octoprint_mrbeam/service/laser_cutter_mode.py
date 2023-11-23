@@ -6,7 +6,8 @@ _instance = None
 
 
 def laser_cutter_mode_service(plugin):
-    """Get or create a singleton instance of the LaserCutterModeService.
+    """
+    Get or create a singleton instance of the LaserCutterModeService.
 
     This function is used to manage a singleton instance of the LaserCutterModeService
     class. It ensures that only one instance of the service is created and returned
@@ -20,7 +21,6 @@ def laser_cutter_mode_service(plugin):
     Returns:
         _instance (LaserCutterModeService): The singleton instance of the LaserCutterModeService
         class. If no instance exists, it creates one and returns it.
-
     """
     global _instance
     if _instance is None:
