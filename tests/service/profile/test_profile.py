@@ -11,12 +11,13 @@ from octoprint.settings import settings
 from octoprint_mrbeam.constant.profile import laser_cutter as laser_cutter_profiles
 from octoprint_mrbeam.service.profile.laser_cutter_profile import laser_cutter_profile_service, \
 	LaserCutterProfileService
-from octoprint_mrbeam.service.profile.profile import ProfileService
+from octoprint_mrbeam.service.profile.profile import ProfileService, InvalidProfileError, SaveError
 
 
 def test_profile_when_class_instantiation_without_method_implementation():
 	with pytest.raises(NotImplementedError):
 		ProfileService("profile_service_test_id", laser_cutter_profiles.default_profile)
+
 
 class ProfileServiceImplementation(ProfileService):
 
@@ -28,6 +29,7 @@ class ProfileServiceImplementation(ProfileService):
 
 	def _ensure_valid_profile(self, profile):
 		return profile
+
 
 @pytest.mark.parametrize("profile, identifier, profile_file_exists, exists",
 						 [
@@ -76,12 +78,28 @@ def test_exists_when_profile_is_initiated(profile, identifier, profile_file_exis
 		# Assert
 		assert profile_service_instance.exists(identifier) == exists
 
+
+def test_save_when_profile_is_empty():
+	profile_service_instance = ProfileServiceImplementation("profile_service_test_id",
+															laser_cutter_profiles.default_profile)
+	with pytest.raises(InvalidProfileError):
+		profile_service_instance.save({})
+
+
+def test_save_when_profile_is_valid_and_path_exists_and_allow_overwrite_is_false():
+	profile_service_instance = ProfileServiceImplementation("profile_service_test_id",
+															laser_cutter_profiles.default_profile)
+	with patch("os.path.exists", return_value=True), pytest.raises(SaveError):
+		profile_service_instance.save(laser_cutter_profiles.rotary_profile, False)
+
+
 @pytest.mark.parametrize("profile, profile_file_exists, expected_profile",
 						 [
 							 (laser_cutter_profiles.default_profile, True, laser_cutter_profiles.default_profile),
 							 (laser_cutter_profiles.rotary_profile, True, laser_cutter_profiles.rotary_profile),
 							 (laser_cutter_profiles.series_2c_profile, True, laser_cutter_profiles.series_2c_profile),
-							 (laser_cutter_profiles.series_2c_rotary_profile, True, laser_cutter_profiles.series_2c_rotary_profile),
+							 (laser_cutter_profiles.series_2c_rotary_profile, True,
+							  laser_cutter_profiles.series_2c_rotary_profile),
 							 (laser_cutter_profiles.default_profile, False, None),
 							 (laser_cutter_profiles.rotary_profile, False, None),
 							 (laser_cutter_profiles.series_2c_profile, False, None),
@@ -101,14 +119,15 @@ def test_get_when_profile_is_initiated(profile, profile_file_exists, expected_pr
 	profile_service_instance = ProfileServiceImplementation("profile_service_test_id", profile)
 
 	with patch("os.path.exists", return_value=profile_file_exists), patch("os.path.isfile",
-	    return_value=profile_file_exists), patch(
+																		  return_value=profile_file_exists), patch(
 		"os.path.exists",
 		return_value=profile_file_exists), patch(
 		"os.path.isfile", return_value=profile_file_exists), patch("__builtin__.open",
-	    mock_open(read_data=json.dumps(profile))), patch(
+																   mock_open(read_data=json.dumps(profile))), patch(
 		"yaml.safe_load", return_value=profile):
-			# Assert
-			assert profile_service_instance.get(profile["id"]) == expected_profile
+		# Assert
+		assert profile_service_instance.get(profile["id"]) == expected_profile
+
 
 @pytest.mark.parametrize("profile, profile_setting, profile_file_exists, expected_profile",
 						 [
@@ -122,7 +141,7 @@ def test_get_when_profile_is_initiated(profile, profile_file_exists, expected_pr
 							  laser_cutter_profiles.series_2c_rotary_profile["id"], True,
 							  laser_cutter_profiles.series_2c_rotary_profile),
 							 (laser_cutter_profiles.default_profile, None, False,
-									 laser_cutter_profiles.default_profile),
+							  laser_cutter_profiles.default_profile),
 							 (laser_cutter_profiles.rotary_profile, None, False, laser_cutter_profiles.rotary_profile),
 							 (laser_cutter_profiles.series_2c_profile, laser_cutter_profiles.series_2c_profile["id"],
 							  False, laser_cutter_profiles.series_2c_profile),
@@ -148,7 +167,7 @@ def test_get_default_when_profile_is_initiated(profile, profile_setting, profile
 		"os.path.exists",
 		return_value=profile_file_exists), patch(
 		"os.path.isfile", return_value=profile_file_exists), patch("__builtin__.open",
-	    mock_open(read_data=json.dumps(profile))), patch(
+																   mock_open(read_data=json.dumps(profile))), patch(
 		"yaml.safe_load", return_value=profile):
 		# Assert
 		assert profile_service_instance.get_default() == expected_profile
