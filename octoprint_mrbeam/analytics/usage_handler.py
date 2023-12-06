@@ -375,7 +375,7 @@ class UsageHandler(object):
         Returns:
             int: job time in seconds, -1 if it could not be found
         """
-        if self.JOB_TIME_KEY not in usage_data:
+        if usage_data is None or self.JOB_TIME_KEY not in usage_data:
             self._logger.error(
                 "No job time found in %s, returning 0 - %s",
                 usage_data,
@@ -410,9 +410,11 @@ class UsageHandler(object):
         if serial is None:
             serial = self.UNKNOWN_SERIAL_KEY
         self._set_job_time([self.AIRFILTER_KEY, serial, self.PREFILTER_KEY], 0)
+        self._logger.info(
+            "Reset prefilter usage data from {}".format(self.get_prefilter_usage())
+        )
         self.start_time_prefilter = -1
         self._write_usage_data()
-        self._logger.info("Reset prefilter usage data")
         self.write_usage_analytics(action="reset_prefilter")
 
     def reset_carbon_filter_usage(self, serial):
@@ -431,9 +433,13 @@ class UsageHandler(object):
             [self.AIRFILTER_KEY, serial, self.CARBON_FILTER_KEY],
             0,
         )
+        self._logger.info(
+            "Reset carbon filter usage data from {}".format(
+                self.get_carbon_filter_usage()
+            )
+        )
         self.start_time_prefilter = -1
         self._write_usage_data()
-        self._logger.info("Reset carbon filter usage data")
         self.write_usage_analytics(action="reset_carbon_filter")
 
     def reset_laser_head_usage(self, serial):
@@ -449,16 +455,18 @@ class UsageHandler(object):
         if serial is None:
             serial = self.UNKNOWN_SERIAL_KEY
         self._set_job_time([self.LASER_HEAD_KEY, serial], 0)
+        self._logger.info(
+            "Reset laser head usage data from {}".format(self.get_laser_head_usage())
+        )
         self.start_time_laser_head = -1
         self._write_usage_data()
-        self._logger.info("Reset laser head usage data")
         self.write_usage_analytics(action="reset_laser_head")
 
     def reset_gantry_usage(self):
         self._set_job_time([self.GANTRY_KEY], 0)
+        self._logger.info("Reset gantry usage data".format(self.get_gantry_usage()))
         self.start_time_gantry = -1
         self._write_usage_data()
-        self._logger.info("Reset gantry usage data")
         self.write_usage_analytics(action="reset_gantry")
 
     def get_review_given(self):
