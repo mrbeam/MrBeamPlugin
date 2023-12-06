@@ -273,7 +273,7 @@ def test_profile_for_airfilter_8(air_filter):
         "carbonfilter_stages": 1,
         "prefilter": [
             {
-                "lifespan": 320,
+                "lifespan": 150,
                 "shopify_link": "maintenance/af3/pf1",
             },
         ],
@@ -333,7 +333,7 @@ def test_get_lifespan_for_airfilter_1_carbonfilter(air_filter):
         (3, 40),
         (4, 40),
         (5, 40),
-        (8, 320),
+        (8, 150),
         (None, 40),
     ],
 )
@@ -356,7 +356,7 @@ def test_get_lifespan_for_prefilter(model_id, expected_lifespan, air_filter):
         (3, [80]),
         (4, [80]),
         (5, [40]),
-        (8, [320]),
+        (8, [150]),
         (None, [40]),
     ],
 )
@@ -436,7 +436,7 @@ def test_get_list_of_lifespans_for_prefilter(air_filter, mrbeam_plugin):
     lifespan = air_filter.get_lifespans("prefilter")
 
     # Assert
-    assert lifespan == [320]
+    assert lifespan == [150]
 
 
 def test_get_list_of_lifespans_for_carbonfilter(air_filter, mrbeam_plugin):

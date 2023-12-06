@@ -932,7 +932,10 @@ class UsageHandler(object):
 
         # calculate the percentage
         time_percentage = self._get_percentage_from_time(
-            stage_usage_time, self._airfilter.get_lifespans(filter_stage)[0]
+            stage_usage_time,
+            self._airfilter.get_lifespans(filter_stage)[0]
+            if self._airfilter.get_lifespans(filter_stage)
+            else 0.1,
         )
 
         # calculate the total percentage
