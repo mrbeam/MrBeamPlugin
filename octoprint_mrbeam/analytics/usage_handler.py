@@ -375,7 +375,7 @@ class UsageHandler(object):
         Returns:
             int: job time in seconds, -1 if it could not be found
         """
-        if self.JOB_TIME_KEY not in usage_data:
+        if usage_data is None or self.JOB_TIME_KEY not in usage_data:
             self._logger.error(
                 "No job time found in %s, returning 0 - %s",
                 usage_data,
@@ -410,6 +410,9 @@ class UsageHandler(object):
         if serial is None:
             serial = self.UNKNOWN_SERIAL_KEY
         self._set_job_time([self.AIRFILTER_KEY, serial, self.PREFILTER_KEY], 0)
+        self._logger.info(
+            "Reset prefilter usage data from {}".format(self.get_prefilter_usage())
+        )
         self.start_time_prefilter = -1
         self._write_usage_data()
         self.write_usage_analytics(action="reset_prefilter")
@@ -430,6 +433,11 @@ class UsageHandler(object):
             [self.AIRFILTER_KEY, serial, self.CARBON_FILTER_KEY],
             0,
         )
+        self._logger.info(
+            "Reset carbon filter usage data from {}".format(
+                self.get_carbon_filter_usage()
+            )
+        )
         self.start_time_prefilter = -1
         self._write_usage_data()
         self.write_usage_analytics(action="reset_carbon_filter")
@@ -447,12 +455,16 @@ class UsageHandler(object):
         if serial is None:
             serial = self.UNKNOWN_SERIAL_KEY
         self._set_job_time([self.LASER_HEAD_KEY, serial], 0)
+        self._logger.info(
+            "Reset laser head usage data from {}".format(self.get_laser_head_usage())
+        )
         self.start_time_laser_head = -1
         self._write_usage_data()
         self.write_usage_analytics(action="reset_laser_head")
 
     def reset_gantry_usage(self):
         self._set_job_time([self.GANTRY_KEY], 0)
+        self._logger.info("Reset gantry usage data {}".format(self.get_gantry_usage()))
         self.start_time_gantry = -1
         self._write_usage_data()
         self.write_usage_analytics(action="reset_gantry")
@@ -918,10 +930,13 @@ class UsageHandler(object):
         else:
             stage_usage_time = 0
 
+        if self._airfilter.get_lifespans(filter_stage):
+            lifespan = self._airfilter.get_lifespans(filter_stage)[0]
+        else:
+            lifespan = 0.1  # set to 0.1 as division by 0 will fail
+
         # calculate the percentage
-        time_percentage = self._get_percentage_from_time(
-            stage_usage_time, self._airfilter.get_lifespans(filter_stage)[0]
-        )
+        time_percentage = self._get_percentage_from_time(stage_usage_time, lifespan)
 
         # calculate the total percentage
         total_percentage = (
@@ -976,9 +991,9 @@ class UsageHandler(object):
         )
 
         # calculate the total percentage
-        total_percentage = max(pressure_percentage, time_percentage)
+        total_percentage = max(pressure_percentage, min(time_percentage, 80))
         logger.debug(
-            "pressure_percentage: {} time_percentage: {} rpm_percentage: {} total percentag: {}".format(
+            "pressure_percentage: {} time_percentage: {} rpm_percentage: {} total percentage: {}".format(
                 pressure_percentage, time_percentage, rpm_percentage, total_percentage
             )
         )

@@ -925,7 +925,7 @@ class PhotoCreator(object):
                     self._plugin.user_notification_system.show_notifications(
                         self._plugin.user_notification_system.get_notification(
                             "err_cam_conn_err",
-                            error_code=ErrorCodes.E_1006,
+                            err_code=ErrorCodes.E_1006,
                         )
                     )
                 cam.async_capture()  # starts capture with new settings

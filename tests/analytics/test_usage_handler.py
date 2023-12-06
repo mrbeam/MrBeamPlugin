@@ -308,7 +308,7 @@ def test_prefilter_usage_af3(usage_handler, mrbeam_plugin):
     usage = usage_handler.get_prefilter_usage()
 
     # Assert
-    assert usage == 48
+    assert usage == 80
 
 
 # test set pressure
@@ -430,7 +430,7 @@ def test_set_fan_test_rpm(usage_handler, mrbeam_plugin):
     "graph, value, expected",
     [
         (AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER, 900, 25),
-        (AirFilter.AF3_PRESSURE_GRAPH_PREFILTER, 700, 48),
+        (AirFilter.AF3_PRESSURE_GRAPH_PREFILTER, 700, 80),
         (AirFilter.AF3_RPM_GRAPH, 9870, 5),
     ],
 )

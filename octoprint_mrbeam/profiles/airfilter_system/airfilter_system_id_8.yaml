@@ -2,7 +2,7 @@
 prefilter_stages: 1
 carbonfilter_stages: 1
 prefilter:
-  - lifespan: 320
+  - lifespan: 150
     shopify_link: 'maintenance/af3/pf1' # no utm parameters needed, as the redirect already use these
 carbonfilter:
   - lifespan: 1120
