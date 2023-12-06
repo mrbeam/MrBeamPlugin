@@ -464,7 +464,7 @@ class UsageHandler(object):
 
     def reset_gantry_usage(self):
         self._set_job_time([self.GANTRY_KEY], 0)
-        self._logger.info("Reset gantry usage data".format(self.get_gantry_usage()))
+        self._logger.info("Reset gantry usage data {}".format(self.get_gantry_usage()))
         self.start_time_gantry = -1
         self._write_usage_data()
         self.write_usage_analytics(action="reset_gantry")
