@@ -380,6 +380,10 @@ $(function () {
                 });
             };
 
+            // home the device
+            self.workingArea.performHomingCycle("corner_calibration");
+
+            // generate markers
             self.calibration.simpleApiCommand(
                 "generate_calibration_markers_svg",
                 {},
