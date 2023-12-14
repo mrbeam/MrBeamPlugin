@@ -8,7 +8,7 @@
             <h3 data-bind='visible: cooling'>{{ _('Cooling') }}</h3>
         </div>
         <div class="modal-body" data-bind="visible: fan_not_connected">
-            <img src="/plugin/mrbeam/static/img/airfilter.jpg">
+            <img src="/plugin/mrbeam/static/img/air_filter/air_filter_not_connected.png">
             <h5>{{ _('Can not detect air filter system. Is it plugged in?') }}</h5>
         </div>
 
@@ -18,12 +18,12 @@
         </div>
 
         <div class="modal-body" data-bind="visible: lid_open">
-            <img src="/plugin/mrbeam/static/img/closelid.jpg">
+            <img src="/plugin/mrbeam/static/img/close_lid.png">
             <h5>{{ _('Please close the lid completely before we can proceed.') }}</h5>
         </div>
 
         <div class="modal-body" data-bind="visible: ready_to_laser">
-            <img src="/plugin/mrbeam/static/img/onebutton.jpg">
+            <img src="/plugin/mrbeam/static/img/onebutton.png">
             <h5>{{ _('Everything is ready to go.') }}</h5>
             <h5 data-bind="visible: jobTimeEstimationCalculated">
                 {{ _('Estimated duration') }}:
@@ -32,7 +32,7 @@
         </div>
 
         <div class="modal-body" data-bind="visible: paused() || ready_to_laser_state() === status.OK">
-            <img src="/plugin/mrbeam/static/img/onebutton.jpg">
+            <img src="/plugin/mrbeam/static/img/onebutton.png">
             <h5>{{ _('Everything is ready to go.') }}</h5>
         </div>
 
