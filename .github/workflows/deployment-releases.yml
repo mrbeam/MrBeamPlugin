@@ -45,11 +45,11 @@ jobs:
         id: set_release_env
         run: |
           if [ ${{ steps.regex-match-alpha-release.outputs.match }} != "" ]; then
-            echo 'deployment-env=alpha' >> $GITHUB_OUTPUT
+            echo 'deployment-env=Alpha' >> $GITHUB_OUTPUT
           elif [ ${{ steps.regex-match-beta-release.outputs.match }} != "" ]; then
-            echo 'deployment-env=beta' >> $GITHUB_OUTPUT
+            echo 'deployment-env=Beta' >> $GITHUB_OUTPUT
           elif [ ${{ steps.regex-match-prod-release.outputs.match }} != "" ]; then
-            echo 'deployment-env=production' >> $GITHUB_OUTPUT
+            echo 'deployment-env=Production' >> $GITHUB_OUTPUT
           else
             echo 'deployment-env=unknown' >> $GITHUB_OUTPUT
             echo 'release name unrecognized: ${{ github.ref_name }}'
