@@ -3,7 +3,7 @@
     "@4tw/cypress-drag-drop": "^2.2.3",
     "@types/minimatch": "^5.1.2",
     "cy-verify-downloads": "^0.1.11",
-    "cypress": "^11.2.0",
+    "cypress": "^14.5.2",
     "cypress-delete-downloads-folder": "^0.0.2",
     "cypress-file-upload": "^5.0.8",
     "cypress-if": "^1.10.2",
